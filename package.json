@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node .output/server/index.mjs",
+    "start": "node --env-file-if-exists=.env server.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:db": "bash supabase/tests/run.sh",
@@ -27,6 +27,7 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "sonner": "^2.0.8",
+    "srvx": "^1.0.7",
     "tailwind-merge": "^3.7.0",
     "zod": "^4.6.7"
   },
@@ -47,5 +48,8 @@
     "vitest": "^5.0.5"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  }
 }
