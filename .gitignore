@@ -1,0 +1,12 @@
+node_modules
+dist
+.output
+.vinxi
+.nitro
+.tanstack
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+e2e/screenshots

@@ -1,0 +1,13 @@
+# Configuração local do Supabase (Lovable Cloud usa Supabase por baixo).
+# Substitua pelo ID real do projeto ao conectar no Lovable Cloud.
+project_id = "greengoal"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/reset-password", "http://localhost:3000/auth"]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true

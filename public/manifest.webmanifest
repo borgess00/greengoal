@@ -1,0 +1,19 @@
+{
+  "name": "GreenGoal — Estatísticas de futebol",
+  "short_name": "GreenGoal",
+  "description": "Estatísticas e probabilidades de futebol por assinatura. Somente para maiores de 18 anos.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#064E3B",
+  "categories": ["sports"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
