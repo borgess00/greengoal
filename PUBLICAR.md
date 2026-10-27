@@ -14,7 +14,17 @@ Você precisa de duas coisas: um **banco Supabase** (ou o Lovable Cloud, que é 
 4. Em **Authentication › Providers › Email**, deixe a confirmação de e-mail ligada. Para enviar e-mails em volume, configure um SMTP próprio em **Authentication › SMTP** (o envio padrão do Supabase é limitado).
 5. Em **Project Settings › API**, copie: *Project URL*, a chave *anon/publishable* e a chave *service_role* (secreta).
 
-## 2. Hospedagem (exemplo: Render — funciona igual no Railway ou num servidor próprio)
+## 2a. Hospedagem no Netlify (recomendado)
+
+> **Não use "arrastar arquivos" (Dropped files / Netlify Drop).** Isso só envia arquivos estáticos e o site responde "Page not found": ele precisa do build e das funções de servidor.
+
+1. No Netlify: **Add new project › Import an existing project › GitHub** › escolha `borgess00/greengoal`.
+2. As configurações vêm do `netlify.toml` (build `npm run build`, pasta `dist/client`, Node 22) — não precisa mudar nada.
+3. Antes do primeiro deploy, em **Project configuration › Environment variables**, cadastre as variáveis da tabela abaixo.
+4. Clique em **Deploy**. Depois, em **Domain management**, adicione seu domínio, se tiver.
+5. Atualize o *Site URL* e as *Redirect URLs* do Supabase com o endereço `https://SEU-SITE.netlify.app`.
+
+## 2b. Outra hospedagem (exemplo: Render — funciona igual no Railway ou num servidor próprio)
 
 1. Envie o código para um repositório no GitHub (descompacte o .zip e faça o push).
 2. No Render: **New › Web Service** › escolha o repositório.

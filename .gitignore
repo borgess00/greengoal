@@ -11,3 +11,6 @@ dist
 .DS_Store
 e2e/screenshots
 supabase/.temp
+
+# Local Netlify folder
+.netlify
