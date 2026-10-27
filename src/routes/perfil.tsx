@@ -33,6 +33,7 @@ import { daysUntil, errorMessage, formatBRL, formatDate, formatDateTime } from '
 import { requireSession } from '@/lib/guards'
 import { FALLBACK_PLANS } from '@/lib/plans'
 import { seo } from '@/lib/seo'
+import { SITE } from '@/lib/site'
 import { isSubscriptionValid, type PaymentRow, type PlanRow } from '@/lib/types'
 import { cancelSubscription, resumeSubscription } from '@/server/billing.functions'
 import { getPlans } from '@/server/plans.functions'
@@ -67,6 +68,13 @@ function PerfilPage() {
         </Button>
       </PageHeader>
       <div className="container-page py-8">
+        <p className="mb-5 text-sm text-muted-foreground">
+          Precisa de ajuda com a conta ou a assinatura?{' '}
+          <a href={SITE.supportDiscord} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary hover:underline">
+            Fale com o suporte no Discord
+          </a>
+          .
+        </p>
         <Tabs value={aba} onValueChange={(v) => navigate({ search: { aba: v as typeof aba }, replace: true })}>
           <TabsList>
             <TabsTrigger value="dados">

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Mail } from 'lucide-react'
+import { Mail, MessageCircle } from 'lucide-react'
 import { Logo } from './logo'
 import { SITE } from '@/lib/site'
 
@@ -45,6 +45,15 @@ export function Footer() {
           <a href={`mailto:${SITE.contactEmail}`} className="flex items-center gap-2 text-sm text-emerald-100/90 hover:text-white">
             <Mail className="size-4" /> {SITE.contactEmail}
           </a>
+          <a
+            href={SITE.supportDiscord}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#5865F2] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4752c4]"
+          >
+            <MessageCircle className="size-4" /> Suporte no Discord
+          </a>
+          {SITE.social.length > 0 && (
           <ul className="mt-4 flex flex-wrap gap-2">
             {SITE.social.map((s) => (
               <li key={s.name}>
@@ -54,6 +63,7 @@ export function Footer() {
               </li>
             ))}
           </ul>
+          )}
         </div>
       </div>
       <div className="border-t border-white/10">

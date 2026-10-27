@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { BarChart3, Cpu, Database, ShieldCheck, Sparkles } from 'lucide-react'
+import { BarChart3, Cpu, Database, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { RiskNotice } from '@/components/common/risk-notice'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -66,6 +66,10 @@ const FAQ = [
     a: 'O site foi feito para o celular e pode ser adicionado à tela inicial. Ele precisa de internet para carregar jogos e análises — não há modo offline.',
   },
   {
+    q: 'Como falo com o suporte?',
+    a: 'Pelo nosso servidor no Discord (link no rodapé e no fim desta página) ou pelo e-mail contato.greengoal@gmail.com.',
+  },
+  {
     q: 'Quem desenvolve o GreenGoal?',
     a: 'O GreenGoal é desenvolvido pela PredyX IAs.',
   },
@@ -118,11 +122,22 @@ function SobrePage() {
           </Accordion>
           <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl bg-secondary p-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-secondary-foreground">
-              Ainda com dúvidas? Escreva para <a href={`mailto:${SITE.contactEmail}`} className="font-semibold text-primary">{SITE.contactEmail}</a>.
+              Ainda com dúvidas? Fale com o suporte no nosso Discord ou escreva para{' '}
+              <a href={`mailto:${SITE.contactEmail}`} className="font-semibold text-primary">
+                {SITE.contactEmail}
+              </a>
+              .
             </p>
-            <Button asChild>
-              <Link to="/planos">Ver planos</Link>
-            </Button>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button asChild className="bg-[#5865F2] shadow-none hover:bg-[#4752c4]">
+                <a href={SITE.supportDiscord} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle /> Discord de suporte
+                </a>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/planos">Ver planos</Link>
+              </Button>
+            </div>
           </div>
         </section>
         <RiskNotice className="mx-auto mt-10 max-w-3xl" />
