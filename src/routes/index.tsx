@@ -25,7 +25,7 @@ export const Route = createFileRoute('/')({
 
 const BENEFITS = [
   { icon: Sparkles, title: 'Análises por partida', text: 'Contexto, forma recente, gols, cartões e finalizadores organizados em seções objetivas, escritas a partir de dados reais.' },
-  { icon: CalendarDays, title: 'Jogos organizados', text: 'A grade do dia separada em Tarde e Noite, com filtro por campeonato e horário de Brasília.' },
+  { icon: CalendarDays, title: 'Jogos organizados', text: 'Os jogos do dia organizados por país e competição, com filtros e horário de Brasília.' },
   { icon: Database, title: 'Dados objetivos', text: 'Números da API-Football. Quando um dado não existe, ele não aparece — nada é inventado para preencher lacunas.' },
   { icon: Smartphone, title: 'Feito para o celular', text: 'Layout pensado para a tela do celular. Adicione o GreenGoal à tela inicial e acesse com um toque.' },
 ]
@@ -134,7 +134,7 @@ function HomePage() {
           <div className="relative flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div className="max-w-xl">
               <LineChart className="mb-4 size-9 text-brand-light" />
-              <h2 className="font-display text-3xl font-bold">Planos a partir de R$ 19,90</h2>
+              <h2 className="font-display text-3xl font-bold">Planos a partir de R$ 13,90</h2>
               <p className="mt-2 text-emerald-50/85">Semanal, mensal ou anual — todos liberam os mesmos recursos: análises completas, conferência de bilhete e radar de escanteios.</p>
             </div>
             <Button asChild size="lg" variant="white">

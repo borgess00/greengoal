@@ -24,7 +24,7 @@ export const Route = createFileRoute('/planos')({
   head: () =>
     seo({
       title: 'Planos de assinatura',
-      description: 'Assine o GreenGoal: semanal R$ 19,90, mensal R$ 49,90 ou anual R$ 399,90. Todos os planos liberam os mesmos recursos.',
+      description: 'Assine o GreenGoal: semanal R$ 13,90, mensal R$ 41,90 ou anual R$ 399,90. Todos os planos liberam os mesmos recursos.',
       path: '/planos',
     }),
   component: PlanosPage,

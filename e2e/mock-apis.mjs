@@ -18,14 +18,14 @@ const team = (id) => ({ id, name: TEAMS[id], logo: null })
 function fixtureFor(id, dateIso, leagueId, home, away, status = 'NS', score = null) {
   return {
     fixture: { id, referee: 'Wilton Pereira Sampaio', timezone: 'America/Sao_Paulo', date: dateIso, venue: { name: 'Estádio Teste' }, status: { short: status, long: status, elapsed: status === 'FT' ? 90 : null } },
-    league: { id: leagueId, name: leagueId === 39 ? 'Premier League' : leagueId === 71 ? 'Serie A' : 'Liga Fora', country: 'Brazil', logo: null, season: 2026, round: 'Regular Season - 30' },
+    league: { id: leagueId, name: leagueId === 39 ? 'Premier League' : leagueId === 71 ? 'Serie A' : 'Liga Fora', country: leagueId === 39 ? 'England' : 'Brazil', logo: null, season: 2026, round: 'Regular Season - 30' },
     teams: { home: team(home), away: team(away) },
     goals: { home: score?.[0] ?? null, away: score?.[1] ?? null },
     score: { halftime: { home: null, away: null }, fulltime: { home: score?.[0] ?? null, away: score?.[1] ?? null } },
   }
 }
 
-// Partidas por data: D 16:00 SP (tarde), D 19:30 SP (noite), D+1 06:00 SP (madrugada -> grade D),
+// Partidas por data (horário de Brasília): 16:00, 19:30 e 06:00,
 // além de uma liga desabilitada que deve ser descartada.
 function fixturesOn(date) {
   const n = Number(date.replaceAll('-', '')) % 100000
@@ -34,7 +34,7 @@ function fixturesOn(date) {
   return [
     fixtureFor(n * 10 + 1, at(date, '19:00'), 71, 1, 2, 'FT', [2, 1]),
     fixtureFor(n * 10 + 2, at(date, '22:30'), 39, 3, 4),
-    fixtureFor(n * 10 + 3, at(date, '09:00'), 71, 5, 6), // 06:00 SP: madrugada da grade anterior
+    fixtureFor(n * 10 + 3, at(date, '09:00'), 71, 5, 6), // 06:00 em Brasília: pertence ao próprio dia
     fixtureFor(n * 10 + 4, at(date, '20:00'), 9999, 7, 8),
   ].map((f) => f)
     .concat(date === next ? [] : [])
@@ -83,7 +83,7 @@ function football(path, q) {
     return q.get('ids').split('-').map(Number).map((id) => {
       const f = byId.get(id)
       if (!f) return null
-      // Simula a partida da noite já encerrada quando consultada por id.
+      // Simula a partida já iniciada como encerrada quando consultada por id.
       if (f.fixture.status.short === 'NS' && Date.parse(f.fixture.date) < Date.now()) {
         return { ...f, fixture: { ...f.fixture, status: { short: 'FT', long: 'Match Finished', elapsed: 90 } }, goals: { home: 1, away: 1 }, score: { fulltime: { home: 1, away: 1 } } }
       }

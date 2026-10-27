@@ -8,6 +8,7 @@ export const SITE = {
     'Estatísticas, forma recente, confrontos diretos e análises de futebol em português. Informação para decidir melhor — sem promessa de resultado. Somente 18+.',
   url: (import.meta.env.VITE_SITE_URL as string | undefined) ?? 'https://greengoal.com.br',
   contactEmail: 'contato.greengoal@gmail.com',
+  developer: 'PredyX IAs',
   social: [
     { name: 'Instagram', href: 'https://instagram.com/' },
     { name: 'X', href: 'https://x.com/' },

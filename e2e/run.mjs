@@ -22,7 +22,6 @@ function spDate(offsetDays = 0) {
   const now = new Date(Date.now() + offsetDays * 86400000)
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(now).map((x) => [x.type, x.value]))
   let d = `${p.year}-${p.month}-${p.day}`
-  if (Number(p.hour) < 8) d = new Date(Date.parse(`${d}T12:00:00Z`) - 86400000).toISOString().slice(0, 10)
   return d
 }
 
@@ -107,7 +106,7 @@ await step('Responsável recebe papel admin automaticamente', async () => {
 })
 
 let fixtureIds = []
-await step('Admin sincroniza a grade (madrugada e filtro de campeonatos)', async () => {
+await step('Admin busca os jogos do dia (dia do calendário e filtro de campeonatos)', async () => {
   const ctx = await adultCtx()
   const page = await ctx.newPage()
   await login(page, ADMIN_EMAIL)
@@ -115,12 +114,11 @@ await step('Admin sincroniza a grade (madrugada e filtro de campeonatos)', async
   await page.waitForLoadState('networkidle')
   await page.getByRole('button', { name: 'Buscar jogos do dia' }).click()
   await page.getByText(/partida\(s\) salvas/).waitFor({ timeout: 20000 })
-  const { data } = await admin.from('fixtures').select('id, period, local_time, league_id').eq('grade_date', grade).order('kickoff_at')
+  const { data } = await admin.from('fixtures').select('id, local_time, league_id').eq('grade_date', grade).order('id')
   fixtureIds = data.map((f) => f.id)
   assert.equal(data.length, 3, `esperado 3 partidas, veio ${data.length}`)
   assert.ok(!data.some((f) => f.league_id === 9999), 'liga desabilitada não deveria entrar')
-  assert.deepEqual(data.map((f) => f.period), ['tarde', 'noite', 'noite'])
-  assert.equal(data[2].local_time, '06:00')
+  assert.deepEqual(data.map((f) => f.local_time), ['16:00', '19:30', '06:00'])
   await page.screenshot({ path: `${SHOTS}/admin.png`, fullPage: true })
   await ctx.close()
 })
@@ -270,8 +268,9 @@ await step('Radar de escanteios e jogos do dia no celular', async () => {
   await page.getByRole('button', { name: /Baixar relatório/ }).waitFor({ timeout: 15000 })
   await page.screenshot({ path: `${SHOTS}/escanteios-mobile.png`, fullPage: true })
   await page.goto(`${BASE}/jogos`)
-  await page.getByRole('heading', { name: 'Tarde' }).waitFor()
-  await page.getByText('18h às 07h59 (madrugada inclusa)').first().waitFor()
+  await page.getByRole('heading', { name: 'Brasil' }).waitFor()
+  await page.getByRole('heading', { name: 'Inglaterra' }).waitFor()
+  assert.equal(await page.getByText(/Tarde|Noite/).count(), 0, 'não deve haver divisão Tarde/Noite')
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
   assert.equal(overflow, false, 'rolagem horizontal no celular')
   await page.screenshot({ path: `${SHOTS}/jogos-mobile.png`, fullPage: true })

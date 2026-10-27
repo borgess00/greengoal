@@ -8,6 +8,7 @@ Você precisa de duas coisas: um **banco Supabase** (ou o Lovable Cloud, que é 
 2. Abra **SQL Editor** e execute, nesta ordem, o conteúdo dos arquivos:
    - `supabase/migrations/20261026120000_core_schema.sql`
    - `supabase/migrations/20261026120100_seed_leagues.sql`
+   - `supabase/migrations/20261027120000_precos_e_dia_calendario.sql`
 3. Em **Authentication › URL Configuration**:
    - *Site URL*: o endereço final do site (ex.: `https://greengoal.com.br`)
    - *Redirect URLs*: `https://SEU-DOMINIO/auth` e `https://SEU-DOMINIO/reset-password`

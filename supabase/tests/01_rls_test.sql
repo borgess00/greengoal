@@ -8,13 +8,17 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-00000000000b', 'assinante@example.com', '{"full_name":"Assinante"}'),
   ('00000000-0000-0000-0000-00000000000c', 'visitante@example.com', '{"full_name":"Visitante"}');
 
-insert into public.fixtures (id, grade_date, kickoff_at, local_time, period, league_id, league_name, season,
+insert into public.fixtures (id, grade_date, kickoff_at, local_time, league_id, league_name, season,
   home_team_id, home_team_name, away_team_id, away_team_name)
-values (1001, '2026-10-26', '2026-10-26 22:00:00+00', '19:00', 'noite', 71, 'Brasileirão Série A', 2026, 1, 'Palmeiras', 2, 'Flamengo');
+values (1001, '2026-10-26', '2026-10-26 22:00:00+00', '19:00', 71, 'Brasileirão Série A', 2026, 1, 'Palmeiras', 2, 'Flamengo');
 insert into public.analyses (fixture_id, status, content) values (1001, 'done', '{"secoes":{"gols":"texto"}}');
 insert into public.fixture_data (fixture_id, payload) values (1001, '{"raw":true}');
 
 do $$ begin
+  assert (select price_cents from public.plans where id = 'weekly') = 1390, 'semanal deveria custar R$ 13,90';
+  assert (select price_cents from public.plans where id = 'monthly') = 4190, 'mensal deveria custar R$ 41,90';
+  assert (select price_cents from public.plans where id = 'annual') = 39990, 'anual deveria continuar R$ 399,90';
+  assert not exists (select 1 from information_schema.columns where table_name = 'fixtures' and column_name = 'period'), 'coluna period deveria ter saído';
   assert (select has_analysis from public.fixtures where id = 1001), 'has_analysis deveria ser true';
   assert public.has_role('00000000-0000-0000-0000-00000000000a', 'admin'), 'admin não recebeu papel';
   assert not public.has_role('00000000-0000-0000-0000-00000000000b', 'admin'), 'usuário comum virou admin';

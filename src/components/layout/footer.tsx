@@ -57,7 +57,9 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="container-page flex flex-col gap-2 py-5 text-xs text-emerald-100/70 sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} GreenGoal. Todos os direitos reservados.</p>
+          <p>
+            © {new Date().getFullYear()} GreenGoal. Todos os direitos reservados. Desenvolvido pela <strong className="font-semibold text-emerald-50">{SITE.developer}</strong>.
+          </p>
           <p>Não somos casa de apostas e não recebemos apostas. Jogue com responsabilidade.</p>
         </div>
       </div>

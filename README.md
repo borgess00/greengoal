@@ -1,5 +1,7 @@
 # GreenGoal
 
+Desenvolvido pela **PredyX IAs**.
+
 Site de estatísticas e probabilidades de futebol por assinatura, em português do Brasil, **exclusivo para maiores de 18 anos**.
 O GreenGoal é fonte de informação estatística — não promete lucro, ganho ou resultado. Apostas envolvem risco.
 
@@ -25,7 +27,8 @@ src/
     auth-middleware.ts    middlewares requireAuth / requireAdmin / requireSubscriber
     *.functions.ts        createServerFn (partidas, análises, admin, bilhete, planos, escanteios)
   lib/
-    grade.ts              regras de Tarde/Noite no fuso America/Sao_Paulo
+    grade.ts              dia do calendário no fuso America/Sao_Paulo
+    fixture-groups.ts     agrupamento dos jogos por país e competição
     facts.ts              transforma os dados da API em fatos (nunca inventa valores)
     analysis.ts           esquema JSON da IA, poda de seções e filtro de promessas
     tickets.ts            leitura, busca e conferência de bilhetes
@@ -68,7 +71,7 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 ## Regras implementadas
 
 - **Aviso 18+** no primeiro acesso (autodeclarado, salvo no navegador). Quem responde “Não” permanece bloqueado.
-- **Grade diária** (America/Sao_Paulo): Tarde 08h–17h59; Noite 18h–07h59. Jogos antes das 08h pertencem à grade do dia anterior. A sincronização busca a data e o dia seguinte.
+- **Jogos do dia**: dia do calendário em Brasília (00h00–23h59), sem divisão Tarde/Noite. A página agrupa por país e por competição, com filtros de país e liga.
 - **Páginas leem o banco**, nunca a API-Football. Sem partidas salvas, a lista fica vazia (sem jogos fictícios).
 - **Análises**: só assinantes ativos ou administradores leem — RLS em `analyses` + checagem no servidor. Não assinantes recebem só o bloqueio; o conteúdo real não é enviado.
 - **Limite global de IA**: 50 gerações/dia (dia de São Paulo), controlado atomicamente por `consume_ai_call`. O lote é sequencial e para no teto. Falha na coleta (antes da IA) devolve a cota.

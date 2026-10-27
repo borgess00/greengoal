@@ -21,7 +21,7 @@ import type {
   RawBundle,
 } from '@/lib/api-football-types'
 import { FINISHED } from '@/lib/fixture-status'
-import { addDays, gradeDateFor, periodFor, spParts, TIMEZONE } from '@/lib/grade'
+import { gradeDateFor, spParts, TIMEZONE } from '@/lib/grade'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 
 // API_FOOTBALL_BASE_URL permite apontar para um servidor de testes local.
@@ -136,7 +136,6 @@ export function toFixtureRow(f: ApiFixture) {
     grade_date: gradeDateFor(f.fixture.date),
     kickoff_at: new Date(f.fixture.date).toISOString(),
     local_time: local.time,
-    period: periodFor(f.fixture.date),
     league_id: f.league.id,
     league_name: f.league.name,
     league_country: f.league.country ?? null,
@@ -171,29 +170,24 @@ export async function enabledLeagueIds(): Promise<Set<number>> {
 }
 
 /**
- * Sincroniza a grade de uma data: busca a data e o dia seguinte (madrugada),
- * filtra os campeonatos habilitados e grava/atualiza as partidas.
+ * Sincroniza os jogos de uma data (dia do calendário em Brasília): uma
+ * chamada traz todas as partidas do dia; ficam só os campeonatos habilitados.
  */
 export async function syncGrade(gradeDate: string) {
   const tracker = newTracker()
   const leagues = await enabledLeagueIds()
-  const [day, next] = await Promise.all([
-    fetchFixturesByDate(gradeDate, tracker),
-    fetchFixturesByDate(addDays(gradeDate, 1), tracker),
-  ])
+  const day = await fetchFixturesByDate(gradeDate, tracker)
   const seen = new Set<number>()
-  const rows = [...day, ...next]
+  const rows = day
     .filter((f) => leagues.has(f.league.id))
     .filter((f) => (seen.has(f.fixture.id) ? false : (seen.add(f.fixture.id), true)))
     .map(toFixtureRow)
-  // Grava somente as partidas que pertencem à grade pedida. As demais do
-  // dia seguinte ficam para a sincronização daquela data (grade completa).
-  const gradeRows = rows.filter((r) => r.grade_date === gradeDate)
-  if (gradeRows.length) {
-    const { error } = await supabaseAdmin().from('fixtures').upsert(gradeRows, { onConflict: 'id' })
+    .filter((r) => r.grade_date === gradeDate)
+  if (rows.length) {
+    const { error } = await supabaseAdmin().from('fixtures').upsert(rows, { onConflict: 'id' })
     if (error) throw new Error(`Falha ao gravar partidas: ${error.message}`)
   }
-  return { saved: gradeRows.length, fetched: day.length + next.length, tracker }
+  return { saved: rows.length, fetched: day.length, tracker }
 }
 
 /** Atualiza status/placar de partidas já armazenadas. */

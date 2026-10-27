@@ -14,7 +14,7 @@ npm run dev
 npm run test:e2e
 ```
 
-Cobrem: aviso 18+, 404, papel admin automático, sincronização (madrugada e filtro de ligas),
+Cobrem: aviso 18+, 404, papel admin automático, busca dos jogos do dia (dia do calendário e filtro de ligas),
 geração de análise (poda de seções e de promessas), bloqueio para visitante e não assinante
 (inclusive leitura direta via RLS), assinatura demo, bilhete, cancelamento, vencimento,
 teto diário de IA no lote, radar de escanteios e layout no celular.

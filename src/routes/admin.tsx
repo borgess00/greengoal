@@ -176,8 +176,8 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="md:col-span-2">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Data da grade</CardTitle>
-            <CardDescription>Tarde 08h–17h59 · Noite 18h–07h59 (madrugada pertence ao dia anterior).</CardDescription>
+            <CardTitle className="text-base">Data dos jogos</CardTitle>
+            <CardDescription>Jogos do dia no horário de Brasília (00h00 às 23h59).</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-end gap-3">
             <div className="grid gap-1.5">

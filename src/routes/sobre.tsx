@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { BarChart3, Database, ShieldCheck, Sparkles } from 'lucide-react'
+import { BarChart3, Cpu, Database, ShieldCheck, Sparkles } from 'lucide-react'
 import { PageHeader } from '@/components/common/page-header'
 import { RiskNotice } from '@/components/common/risk-notice'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -38,12 +38,12 @@ const FAQ = [
     a: 'Não. A fonte atual informa o total de escanteios por partida, sem o minuto de cada um. O radar mostra médias gerais a favor e cedidas, com o tamanho da amostra, e deixa essa limitação explícita.',
   },
   {
-    q: 'Como funciona a grade de Tarde e Noite?',
-    a: 'Usamos o horário de Brasília. Tarde vai das 08h às 17h59; Noite vai das 18h às 07h59 do dia seguinte. Jogos de madrugada (antes das 08h) pertencem à grade do dia anterior.',
+    q: 'Como os jogos do dia são organizados?',
+    a: 'Mostramos todos os jogos da data escolhida, no horário de Brasília, agrupados por país e por competição. Você pode filtrar por país e por liga.',
   },
   {
     q: 'Quais planos existem e qual a diferença?',
-    a: 'Semanal (R$ 19,90), mensal (R$ 49,90) e anual (R$ 399,90, equivalente a R$ 33,33/mês). Todos liberam os mesmos recursos.',
+    a: 'Semanal (R$ 13,90), mensal (R$ 41,90) e anual (R$ 399,90, equivalente a R$ 33,33/mês). Todos liberam os mesmos recursos.',
   },
   {
     q: 'O pagamento já é real?',
@@ -56,6 +56,10 @@ const FAQ = [
   {
     q: 'Funciona no celular? Funciona sem internet?',
     a: 'O site foi feito para o celular e pode ser adicionado à tela inicial. Ele precisa de internet para carregar jogos e análises — não há modo offline.',
+  },
+  {
+    q: 'Quem desenvolve o GreenGoal?',
+    a: 'O GreenGoal é desenvolvido pela PredyX IAs.',
   },
   {
     q: 'Vocês aceitam apostas?',
@@ -80,6 +84,16 @@ function SobrePage() {
               <p className="mt-1 text-sm text-muted-foreground">{c.d}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-primary/20 bg-secondary/60 p-6 sm:flex-row sm:items-center">
+          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-dark text-white">
+            <Cpu className="size-6" />
+          </span>
+          <div>
+            <h2 className="font-display text-lg font-semibold text-brand-dark">Desenvolvido pela {SITE.developer}</h2>
+            <p className="text-sm text-secondary-foreground">O GreenGoal é desenvolvido pela {SITE.developer}, responsável pela tecnologia, pelos dados e pelas análises com inteligência artificial da plataforma.</p>
+          </div>
         </div>
 
         <section className="mx-auto mt-16 max-w-3xl" aria-labelledby="faq">

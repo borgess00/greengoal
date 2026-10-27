@@ -1,6 +1,5 @@
 // Tipos das linhas do banco usadas na interface.
 import type { AnalysisContent } from './analysis'
-import type { Period } from './grade'
 import type { TicketResult, summarize } from './tickets'
 
 export interface FixtureRow {
@@ -8,7 +7,6 @@ export interface FixtureRow {
   grade_date: string
   kickoff_at: string
   local_time: string
-  period: Period
   league_id: number
   league_name: string
   league_country: string | null

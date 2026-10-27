@@ -6,7 +6,7 @@ import type { FixtureRow, LeagueRow } from '@/lib/types'
 import { supabasePublic } from '@/integrations/supabase/supabase.server'
 
 const FIXTURE_COLUMNS =
-  'id, grade_date, kickoff_at, local_time, period, league_id, league_name, league_country, league_logo, league_round, season, home_team_id, home_team_name, home_team_logo, away_team_id, away_team_name, away_team_logo, venue, status_short, status_long, elapsed, goals_home, goals_away, ft_home, ft_away, ht_home, ht_away, referee, has_analysis, updated_at'
+  'id, grade_date, kickoff_at, local_time, league_id, league_name, league_country, league_logo, league_round, season, home_team_id, home_team_name, home_team_logo, away_team_id, away_team_name, away_team_logo, venue, status_short, status_long, elapsed, goals_home, goals_away, ft_home, ft_away, ht_home, ht_away, referee, has_analysis, updated_at'
 
 function dbConfigured() {
   return !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL)
@@ -20,18 +20,18 @@ export const getGradeFixtures = createServerFn({ method: 'GET' })
   .validator((d: { date?: string }) => gradeInput.parse(d))
   .handler(async ({ data }) => {
     const date = data.date ?? currentGradeDate()
-    if (!dbConfigured()) return { date, configured: false, fixtures: [] as FixtureRow[], leagues: [] as Pick<LeagueRow, 'id' | 'name' | 'priority'>[] }
+    if (!dbConfigured()) return { date, configured: false, fixtures: [] as FixtureRow[], leagues: [] as Pick<LeagueRow, 'id' | 'name' | 'country' | 'priority'>[] }
     const db = supabasePublic()
     const [fx, lg] = await Promise.all([
       db.from('fixtures').select(FIXTURE_COLUMNS).eq('grade_date', date).order('kickoff_at', { ascending: true }).limit(1000),
-      db.from('leagues').select('id, name, priority'),
+      db.from('leagues').select('id, name, country, priority'),
     ])
     if (fx.error) throw new Error('Não foi possível carregar os jogos.')
     return {
       date,
       configured: true,
       fixtures: (fx.data ?? []) as FixtureRow[],
-      leagues: (lg.data ?? []) as Pick<LeagueRow, 'id' | 'name' | 'priority'>[],
+      leagues: (lg.data ?? []) as Pick<LeagueRow, 'id' | 'name' | 'country' | 'priority'>[],
     }
   })
 

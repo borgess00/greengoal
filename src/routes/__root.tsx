@@ -24,6 +24,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: 'apple-mobile-web-app-title', content: SITE.name },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'rating', content: 'adult' },
+        { name: 'author', content: SITE.developer },
         ...base.meta,
       ],
       links: [

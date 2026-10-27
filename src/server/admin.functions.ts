@@ -11,7 +11,7 @@ import { footballConfigured, syncGrade, verifyLeagues } from './football.server'
 
 const dateInput = z.object({ date: z.string().refine(isValidDate, 'Data inválida') })
 
-export interface AdminFixture extends Pick<FixtureRow, 'id' | 'kickoff_at' | 'local_time' | 'period' | 'league_name' | 'league_id' | 'home_team_name' | 'away_team_name' | 'status_short' | 'goals_home' | 'goals_away'> {
+export interface AdminFixture extends Pick<FixtureRow, 'id' | 'kickoff_at' | 'local_time' | 'league_name' | 'league_country' | 'league_id' | 'home_team_name' | 'away_team_name' | 'status_short' | 'goals_home' | 'goals_away'> {
   analysis: { status: AnalysisStatus; error: string | null; updated_at: string; generated_at: string | null } | null
   has_data: boolean
 }
@@ -24,7 +24,7 @@ export const adminOverview = createServerFn({ method: 'GET' })
     const [fx, usage, limit, runs] = await Promise.all([
       db
         .from('fixtures')
-        .select('id, kickoff_at, local_time, period, league_name, league_id, home_team_name, away_team_name, status_short, goals_home, goals_away')
+        .select('id, kickoff_at, local_time, league_name, league_country, league_id, home_team_name, away_team_name, status_short, goals_home, goals_away')
         .eq('grade_date', data.date)
         .order('kickoff_at', { ascending: true })
         .limit(1000),

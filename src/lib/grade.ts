@@ -1,19 +1,6 @@
-// Regras de grade diária no fuso America/Sao_Paulo.
-//
-// Tarde: 08h00 até 17h59.
-// Noite: 18h00 até 07h59 do dia seguinte (madrugada incluída).
-// Jogos antes das 08h pertencem à grade do dia anterior.
+// Jogos do dia: dia do calendário no fuso America/Sao_Paulo (00h00 às 23h59).
 
 export const TIMEZONE = 'America/Sao_Paulo'
-export const GRADE_START_HOUR = 8
-export const NIGHT_START_HOUR = 18
-
-export type Period = 'tarde' | 'noite'
-
-export const PERIOD_LABELS: Record<Period, { title: string; range: string }> = {
-  tarde: { title: 'Tarde', range: '08h às 17h59' },
-  noite: { title: 'Noite', range: '18h às 07h59 (madrugada inclusa)' },
-}
 
 const partsFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: TIMEZONE,
@@ -59,20 +46,14 @@ export function isValidDate(date: unknown): date is string {
   return !Number.isNaN(dt.getTime()) && dt.toISOString().slice(0, 10) === date
 }
 
-/** Dia da grade a que pertence um início de partida. */
+/** Dia (horário de Brasília) a que pertence um início de partida. */
 export function gradeDateFor(kickoff: Date | string): string {
-  const p = spParts(kickoff)
-  return p.hour < GRADE_START_HOUR ? addDays(p.date, -1) : p.date
+  return spParts(kickoff).date
 }
 
-export function periodFor(kickoff: Date | string): Period {
-  const { hour } = spParts(kickoff)
-  return hour >= GRADE_START_HOUR && hour < NIGHT_START_HOUR ? 'tarde' : 'noite'
-}
-
-/** Grade vigente agora (de madrugada ainda vale a grade de ontem). */
+/** Dia de hoje no horário de Brasília. */
 export function currentGradeDate(now: Date = new Date()): string {
-  return gradeDateFor(now)
+  return spParts(now).date
 }
 
 /** Data calendário de hoje em São Paulo (para limites diários). */
