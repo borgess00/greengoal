@@ -91,6 +91,7 @@ function football(path, q) {
       return f
     }).filter(Boolean)
   }
+  if (path === '/fixtures' && q.get('id')) return football('/fixtures', new URLSearchParams({ ids: q.get('id') }))
   if (path === '/fixtures' && q.get('team')) return lastFixtures(Number(q.get('team')), Number(q.get('last') ?? 10))
   if (path === '/fixtures/headtohead') {
     const [a, b] = q.get('h2h').split('-').map(Number)
@@ -160,6 +161,12 @@ http
       if (url.pathname.startsWith('/football')) {
         if (!req.headers['x-apisports-key']) return res.end(JSON.stringify({ errors: { token: 'missing key' }, response: [] }))
         const path = url.pathname.replace('/football', '')
+        // MOCK_FREE_PLAN=1 imita o plano Free: sem os parâmetros ids e last.
+        const blocked = process.env.MOCK_FREE_PLAN === '1' && ['ids', 'last'].find((p) => url.searchParams.has(p))
+        if (blocked) {
+          calls.push('bloqueado:' + blocked)
+          return res.end(JSON.stringify({ errors: { plan: `Free plans do not have access to the ${blocked[0].toUpperCase() + blocked.slice(1)} parameter.` }, response: [] }))
+        }
         calls.push(path + url.search)
         res.setHeader('x-ratelimit-requests-remaining', String(7500 - calls.length))
         return res.end(JSON.stringify({ errors: [], response: football(path, url.searchParams) }))

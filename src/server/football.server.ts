@@ -43,6 +43,19 @@ export function newTracker(): CallTracker {
 
 class ApiFootballError extends Error {}
 
+/** O plano contratado (ex.: Free) não libera um parâmetro da consulta. */
+class PlanRestrictionError extends ApiFootballError {
+  constructor(
+    public param: string,
+    message: string,
+  ) {
+    super(message)
+  }
+}
+
+// Parâmetros que o plano já recusou nesta instância (evita repetir chamadas).
+const blockedParams = new Set<string>()
+
 async function request<T>(path: string, params: Record<string, string | number>, tracker: CallTracker): Promise<ApiEnvelope<T>> {
   const key = process.env.API_FOOTBALL_KEY?.trim()
   if (!key) throw new ApiFootballError('API_FOOTBALL_KEY não configurada nos segredos do servidor.')
@@ -71,6 +84,11 @@ async function request<T>(path: string, params: Record<string, string | number>,
           lastError = new ApiFootballError(msg)
           await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)))
           continue
+        }
+        const restricted = msg.match(/do not have access to the (\w+) parameter/i)
+        if (restricted) {
+          blockedParams.add(restricted[1].toLowerCase())
+          throw new PlanRestrictionError(restricted[1].toLowerCase(), `API-Football: ${msg}`)
         }
         throw new ApiFootballError(`API-Football: ${msg}`)
       }
@@ -116,14 +134,66 @@ export async function fetchFixturesByDate(date: string, tracker: CallTracker) {
   return body.response ?? []
 }
 
-export async function fetchFixturesByIds(ids: number[], tracker: CallTracker) {
+async function fixturesOneByOne(ids: number[], tracker: CallTracker) {
   const out: ApiFixture[] = []
-  for (let i = 0; i < ids.length; i += 20) {
-    const chunk = ids.slice(i, i + 20)
-    const body = await request<ApiFixture[]>('/fixtures', { ids: chunk.join('-'), timezone: TIMEZONE }, tracker)
+  for (const id of ids) {
+    const body = await request<ApiFixture[]>('/fixtures', { id, timezone: TIMEZONE }, tracker)
     out.push(...(body.response ?? []))
   }
   return out
+}
+
+/** Busca partidas por ID. No plano Free (sem o parâmetro `ids`), busca uma a uma. */
+export async function fetchFixturesByIds(ids: number[], tracker: CallTracker) {
+  if (ids.length === 1 || blockedParams.has('ids')) return fixturesOneByOne(ids, tracker)
+  const out: ApiFixture[] = []
+  for (let i = 0; i < ids.length; i += 20) {
+    const chunk = ids.slice(i, i + 20)
+    try {
+      const body = await request<ApiFixture[]>('/fixtures', { ids: chunk.join('-'), timezone: TIMEZONE }, tracker)
+      out.push(...(body.response ?? []))
+    } catch (e) {
+      if (!(e instanceof PlanRestrictionError)) throw e
+      out.push(...(await fixturesOneByOne(ids.slice(i), tracker)))
+      break
+    }
+  }
+  return out
+}
+
+const finishedDesc = (list: ApiFixture[]) =>
+  list.filter((f) => FINISHED.has(f.fixture.status.short)).sort((a, b) => Date.parse(b.fixture.date) - Date.parse(a.fixture.date))
+
+/**
+ * Últimos jogos encerrados de uma equipe. Sem o parâmetro `last` (plano Free),
+ * usa os jogos da temporada (e da anterior, se faltar amostra).
+ */
+async function lastFixturesOf(teamId: number, n: number, season: number, tracker: CallTracker): Promise<ApiFixture[]> {
+  if (!blockedParams.has('last')) {
+    try {
+      return (await request<ApiFixture[]>('/fixtures', { team: teamId, last: n, timezone: TIMEZONE }, tracker)).response ?? []
+    } catch (e) {
+      if (!(e instanceof PlanRestrictionError)) throw e
+    }
+  }
+  const out = finishedDesc((await request<ApiFixture[]>('/fixtures', { team: teamId, season, timezone: TIMEZONE }, tracker)).response ?? [])
+  if (out.length < n) {
+    const prev = await request<ApiFixture[]>('/fixtures', { team: teamId, season: season - 1, timezone: TIMEZONE }, tracker).catch(() => null)
+    out.push(...finishedDesc(prev?.response ?? []))
+  }
+  return out.slice(0, n)
+}
+
+async function headToHead(homeId: number, awayId: number, tracker: CallTracker): Promise<ApiFixture[]> {
+  const h2h = `${homeId}-${awayId}`
+  if (!blockedParams.has('last')) {
+    try {
+      return (await request<ApiFixture[]>('/fixtures/headtohead', { h2h, last: 10, timezone: TIMEZONE }, tracker)).response ?? []
+    } catch (e) {
+      if (!(e instanceof PlanRestrictionError)) throw e
+    }
+  }
+  return finishedDesc((await request<ApiFixture[]>('/fixtures/headtohead', { h2h, timezone: TIMEZONE }, tracker)).response ?? []).slice(0, 10)
 }
 
 /** Converte a partida da API na linha da tabela fixtures. */
@@ -271,7 +341,7 @@ export async function collectFixtureBundle(fixtureId: number, opts: CollectOptio
   const [h2h, predictions, statsHome, statsAway, lastHome, lastAway, injuries, odds, standings] = await Promise.all([
     step(() =>
       cached(`h2h:${Math.min(homeId, awayId)}-${Math.max(homeId, awayId)}`, 12 * hour, tracker, async () =>
-        (await request<ApiFixture[]>('/fixtures/headtohead', { h2h: `${homeId}-${awayId}`, last: 10, timezone: TIMEZONE }, tracker)).response ?? [],
+        headToHead(homeId, awayId, tracker),
       ),
     ),
     step(() =>
@@ -291,12 +361,12 @@ export async function collectFixtureBundle(fixtureId: number, opts: CollectOptio
     ),
     step(() =>
       cached(`last:${homeId}:${opts.lastMatches}`, 6 * hour, tracker, async () =>
-        (await request<ApiFixture[]>('/fixtures', { team: homeId, last: opts.lastMatches, timezone: TIMEZONE }, tracker)).response ?? [],
+        lastFixturesOf(homeId, opts.lastMatches, season, tracker),
       ),
     ),
     step(() =>
       cached(`last:${awayId}:${opts.lastMatches}`, 6 * hour, tracker, async () =>
-        (await request<ApiFixture[]>('/fixtures', { team: awayId, last: opts.lastMatches, timezone: TIMEZONE }, tracker)).response ?? [],
+        lastFixturesOf(awayId, opts.lastMatches, season, tracker),
       ),
     ),
     step(async () => (await request<ApiInjury[]>('/injuries', { fixture: fixtureId }, tracker)).response ?? []),
@@ -403,14 +473,14 @@ export async function verifyLeagues(ids: number[]) {
 export async function collectCornerData(fixtureId: number, opts: CollectOptions) {
   const tracker = newTracker()
   const db = supabaseAdmin()
-  const { data: fx } = await db.from('fixtures').select('id, home_team_id, away_team_id').eq('id', fixtureId).maybeSingle()
+  const { data: fx } = await db.from('fixtures').select('id, season, home_team_id, away_team_id').eq('id', fixtureId).maybeSingle()
   if (!fx) throw new Error('Partida não encontrada no banco.')
   const { data: existing } = await db.from('fixture_data').select('sources').eq('fixture_id', fixtureId).maybeSingle()
   if (existing && !(existing.sources as Record<string, unknown>)?.light) return { skipped: true, tracker }
 
   const last = (teamId: number) =>
     cached(`last:${teamId}:${opts.lastMatches}`, 6 * 3600, tracker, async () =>
-      (await request<ApiFixture[]>('/fixtures', { team: teamId, last: opts.lastMatches, timezone: TIMEZONE }, tracker)).response ?? [],
+      lastFixturesOf(teamId, opts.lastMatches, fx.season as number, tracker),
     )
   const [home, away] = await Promise.all([last(fx.home_team_id as number), last(fx.away_team_id as number)])
   const recent = (list: ApiFixture[]) =>
