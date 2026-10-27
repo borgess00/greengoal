@@ -239,21 +239,25 @@ function Probabilities({ content, home, away }: { content: AnalysisContent; home
       <CardContent className="space-y-5">
         {p && (
           <div>
-            <div className="mb-2 grid grid-cols-3 text-center text-xs font-semibold text-muted-foreground">
-              <span className="truncate">{home}</span>
-              <span>Empate</span>
-              <span className="truncate">{away}</span>
+            <div className="mb-2 grid grid-cols-3 gap-2 text-center">
+              {[
+                { label: home, value: p.casa, dot: 'bg-primary' },
+                { label: 'Empate', value: p.empate, dot: 'bg-slate-400' },
+                { label: away, value: p.fora, dot: 'bg-brand-dark' },
+              ].map((o) => (
+                <div key={o.label} className="min-w-0">
+                  <p className="flex items-center justify-center gap-1.5 truncate text-xs font-semibold text-muted-foreground">
+                    <span className={cn('size-2 shrink-0 rounded-full', o.dot)} />
+                    <span className="truncate">{o.label}</span>
+                  </p>
+                  <p className="font-display text-xl font-bold tabular">{o.value}%</p>
+                </div>
+              ))}
             </div>
-            <div className="flex h-10 overflow-hidden rounded-full text-sm font-bold text-white tabular">
-              <div className="grid place-items-center bg-primary" style={{ width: `${p.casa}%` }}>
-                {p.casa}%
-              </div>
-              <div className="grid place-items-center bg-slate-400" style={{ width: `${p.empate}%` }}>
-                {p.empate}%
-              </div>
-              <div className="grid place-items-center bg-brand-dark" style={{ width: `${p.fora}%` }}>
-                {p.fora}%
-              </div>
+            <div className="flex h-3 overflow-hidden rounded-full bg-muted" aria-hidden>
+              <div className="bg-primary" style={{ width: `${p.casa}%` }} />
+              <div className="bg-slate-400" style={{ width: `${p.empate}%` }} />
+              <div className="bg-brand-dark" style={{ width: `${p.fora}%` }} />
             </div>
             <p className="mt-2 text-xs text-muted-foreground">Percentuais do modelo estatístico da API-Football para esta partida.</p>
           </div>

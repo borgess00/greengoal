@@ -30,6 +30,14 @@ const FAQ = [
     a: 'Porque preferimos omitir a preencher lacunas com suposições. Algumas competições têm menos estatísticas disponíveis. Sobre o árbitro, por exemplo, a fonte informa apenas o nome, não o histórico de cartões.',
   },
   {
+    q: 'O que são os bilhetes prontos?',
+    a: 'Todos os dias, depois que as análises ficam prontas, a IA monta bilhetes separados por nível de risco (baixo, médio e médio-alto) usando apenas os mercados com mais sustentação nos dados. Quando a fonte informa, cada seleção traz a odd e o bilhete mostra a odd total. A odd muda até o início do jogo e nenhum bilhete tem garantia de resultado.',
+  },
+  {
+    q: 'As análises são atualizadas automaticamente?',
+    a: 'Sim. Uma rotina automática busca os jogos do dia, gera as análises das partidas prioritárias e monta os bilhetes prontos, sem ninguém precisar apertar botão.',
+  },
+  {
     q: 'O que são as probabilidades exibidas?',
     a: 'Os percentuais de vitória, empate e derrota vêm do modelo estatístico da própria API-Football. Quando há odds disponíveis, mostramos também a probabilidade implícita no mercado, sem a margem da casa. São estimativas, não certezas.',
   },

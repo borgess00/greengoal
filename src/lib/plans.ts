@@ -9,6 +9,7 @@ export const FALLBACK_PLANS: PlanRow[] = [
 
 export const PLAN_FEATURES = [
   'Análise completa de todas as partidas publicadas',
+  'Bilhetes prontos do dia, por nível de risco e com odds',
   'Probabilidades, confrontos diretos e forma recente',
   'Gols, cartões, escanteios e finalizadores',
   'Conferência de bilhete com histórico',

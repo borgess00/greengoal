@@ -87,10 +87,15 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 - **Radar de escanteios** (`/escanteios`, assinantes): todas as equipes da grade com amostra, sem limite de 3, com exportação de relatório vertical em PNG (verde e branco).
 - **Dados extras da análise**: classificação, desfalques informados, odds com probabilidade implícita sem margem, destaques por mercado com risco (baixo / médio / médio-alto), motivos a favor e contra, alertas.
 
+## Automação e bilhetes prontos
+
+- **Bilhetes prontos** (`/bilhetes-prontos`, assinantes): a IA monta bilhetes do dia por nível de risco (baixo, médio, médio-alto) a partir das análises concluídas, com odd por seleção (quando a fonte informa), odd total e chance combinada estimada. Tabela `daily_tickets` com RLS igual à das análises. Cada geração consome 1 chamada do teto diário de IA.
+- **Automação diária**: `.github/workflows/automacao.yml` roda `scripts/automacao.ts` no GitHub Actions às 08h05 e 14h05 (Brasília) e sob demanda (Run workflow). Busca os jogos, gera até `auto_max_analyses` análises das partidas que ainda não começaram (prioridade por campeonato e horário) e depois os bilhetes. Liga/desliga e limite no painel Admin › Coleta. Segredos do repositório: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_FOOTBALL_KEY`, `ANTHROPIC_API_KEY` (opcional: variável `ANTHROPIC_MODEL`).
+- Roda fora do Netlify porque as funções de lá têm limite de 30 s, e uma análise pode passar disso.
+
 ## Pendências (não declarar como prontas)
 
 - **Pagamento real**: `startCheckout` é DEMONSTRAÇÃO — não cobra, cria assinatura e pagamento `demo`. Pagamento real e renovação automática exigem um provedor (Stripe, Mercado Pago…) com ativação por **webhook verificado**.
-- **Agendamento**: sincronização e geração são iniciadas por botões do admin. Não há execução agendada.
 - **Offline**: há manifesto e ícones, mas não há service worker nem funcionamento offline.
 - **Integrações externas**: o código foi exercitado contra um mock local (`e2e/mock-apis.mjs`); ainda falta validar com jogos reais usando `API_FOOTBALL_KEY` e `OPENAI_API_KEY` reais.
 - **E-mail**: confirmar configurações de autenticação e entrega de e-mail no Lovable Cloud (confirmação de cadastro e recuperação de senha).

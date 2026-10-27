@@ -1,0 +1,42 @@
+# Automação diária do GreenGoal: busca os jogos do dia, gera as análises e
+# os bilhetes prontos. Roda no GitHub (sem custo de créditos do Netlify).
+# Horários em UTC: 11:05 UTC = 08:05 em Brasília; 17:05 UTC = 14:05.
+# Também pode ser executada manualmente em Actions > Automação diária > Run workflow.
+name: Automação diária
+
+on:
+  schedule:
+    - cron: '5 11 * * *'
+    - cron: '5 17 * * *'
+  workflow_dispatch:
+    inputs:
+      data:
+        description: 'Data (AAAA-MM-DD). Vazio = hoje em Brasília.'
+        required: false
+
+concurrency:
+  group: automacao
+  cancel-in-progress: false
+
+jobs:
+  rodar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Executar rotina
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DATA: ${{ github.event.inputs.data }}
+        run: npx tsx scripts/automacao.ts "$DATA"

@@ -12,6 +12,7 @@ insert into public.fixtures (id, grade_date, kickoff_at, local_time, league_id, 
   home_team_id, home_team_name, away_team_id, away_team_name)
 values (1001, '2026-10-26', '2026-10-26 22:00:00+00', '19:00', 71, 'Brasileirão Série A', 2026, 1, 'Palmeiras', 2, 'Flamengo');
 insert into public.analyses (fixture_id, status, content) values (1001, 'done', '{"secoes":{"gols":"texto"}}');
+insert into public.daily_tickets (grade_date, status, content) values ('2026-10-26', 'done', '{"bilhetes":[]}');
 insert into public.fixture_data (fixture_id, payload) values (1001, '{"raw":true}');
 
 do $$ begin
@@ -58,6 +59,10 @@ do $$ begin
   raise exception 'anon não deveria ter acesso a analyses';
 exception when insufficient_privilege then null; end $$;
 do $$ begin
+  perform count(*) from public.daily_tickets;
+  raise exception 'anon não deveria ter acesso a daily_tickets';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
   perform count(*) from public.fixture_data;
   raise exception 'anon não deveria ter acesso a fixture_data';
 exception when insufficient_privilege then null; end $$;
@@ -68,6 +73,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000c', true);
 do $$ begin
   assert (select count(*) from public.analyses) = 0, 'não assinante não pode ler análise';
+  assert (select count(*) from public.daily_tickets) = 0, 'não assinante não pode ler bilhetes prontos';
   assert (select count(*) from public.tickets) = 1, 'deve ver só o próprio bilhete';
   assert (select count(*) from public.profiles) = 1, 'deve ver só o próprio perfil';
   assert (select count(*) from public.ai_usage) = 0, 'não admin não vê uso de IA';
@@ -104,6 +110,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000b', true);
 do $$ begin
   assert (select count(*) from public.analyses) = 1, 'assinante deve ler análise';
+  assert (select count(*) from public.daily_tickets) = 1, 'assinante deve ler bilhetes prontos';
 end $$;
 delete from public.tickets;
 do $$ begin

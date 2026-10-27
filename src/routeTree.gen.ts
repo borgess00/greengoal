@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BilheteRouteImport } from './routes/bilhete'
+import { Route as BilhetesProntosRouteImport } from './routes/bilhetes-prontos'
 import { Route as EscanteiosRouteImport } from './routes/escanteios'
 import { Route as JogoResponsavelRouteImport } from './routes/jogo-responsavel'
 import { Route as JogosRouteImport } from './routes/jogos'
@@ -42,6 +43,11 @@ const AuthRoute = AuthRouteImport.update({
 const BilheteRoute = BilheteRouteImport.update({
   id: '/bilhete',
   path: '/bilhete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BilhetesProntosRoute = BilhetesProntosRouteImport.update({
+  id: '/bilhetes-prontos',
+  path: '/bilhetes-prontos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EscanteiosRoute = EscanteiosRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/bilhete': typeof BilheteRoute
+  '/bilhetes-prontos': typeof BilhetesProntosRoute
   '/escanteios': typeof EscanteiosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/bilhete': typeof BilheteRoute
+  '/bilhetes-prontos': typeof BilhetesProntosRoute
   '/escanteios': typeof EscanteiosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/bilhete': typeof BilheteRoute
+  '/bilhetes-prontos': typeof BilhetesProntosRoute
   '/escanteios': typeof EscanteiosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/bilhete'
+    | '/bilhetes-prontos'
     | '/escanteios'
     | '/jogo-responsavel'
     | '/jogos'
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/bilhete'
+    | '/bilhetes-prontos'
     | '/escanteios'
     | '/jogo-responsavel'
     | '/jogos'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/bilhete'
+    | '/bilhetes-prontos'
     | '/escanteios'
     | '/jogo-responsavel'
     | '/jogos'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   BilheteRoute: typeof BilheteRoute
+  BilhetesProntosRoute: typeof BilhetesProntosRoute
   EscanteiosRoute: typeof EscanteiosRoute
   JogoResponsavelRoute: typeof JogoResponsavelRoute
   JogosRoute: typeof JogosRoute
@@ -240,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/bilhete'
       fullPath: '/bilhete'
       preLoaderRoute: typeof BilheteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bilhetes-prontos': {
+      id: '/bilhetes-prontos'
+      path: '/bilhetes-prontos'
+      fullPath: '/bilhetes-prontos'
+      preLoaderRoute: typeof BilhetesProntosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/escanteios': {
@@ -320,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   BilheteRoute: BilheteRoute,
+  BilhetesProntosRoute: BilhetesProntosRoute,
   EscanteiosRoute: EscanteiosRoute,
   JogoResponsavelRoute: JogoResponsavelRoute,
   JogosRoute: JogosRoute,

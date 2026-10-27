@@ -103,7 +103,7 @@ function football(path, q) {
     return { form: 'WWDLW', fixtures: { played: { home: 8, away: 7, total: 15 }, wins: { home: 5, away: 3, total: 8 }, draws: { home: 2, away: 2, total: 4 }, loses: { home: 1, away: 2, total: 3 } }, goals: { for: { average: { home: '1.8', away: '1.1', total: '1.5' } }, against: { average: { home: '0.9', away: '1.3', total: '1.1' } } }, clean_sheet: { total: 5 }, failed_to_score: { total: 3 }, cards: { yellow: { '0-15': { total: 4 }, '16-30': { total: 6 } }, red: {} }, lineups: [{ formation: '4-3-3', played: 12 }] }
   }
   if (path === '/injuries') return [{ player: { id: 1, name: 'Jogador Lesionado', type: 'Missing Fixture', reason: 'Knee Injury' }, team: team(2) }]
-  if (path === '/odds') return [{ bookmakers: [{ id: 8, name: 'Bet365', bets: [{ id: 1, name: 'Match Winner', values: [{ value: 'Home', odd: '2.10' }, { value: 'Draw', odd: '3.30' }, { value: 'Away', odd: '3.60' }] }, { id: 5, name: 'Goals Over/Under', values: [{ value: 'Over 2.5', odd: '1.95' }, { value: 'Under 2.5', odd: '1.85' }] }] }] }]
+  if (path === '/odds') return [{ bookmakers: [{ id: 8, name: 'Bet365', bets: [{ id: 1, name: 'Match Winner', values: [{ value: 'Home', odd: '2.10' }, { value: 'Draw', odd: '3.30' }, { value: 'Away', odd: '3.60' }] }, { id: 5, name: 'Goals Over/Under', values: [{ value: 'Over 1.5', odd: '1.30' }, { value: 'Under 1.5', odd: '3.40' }, { value: 'Over 2.5', odd: '1.95' }, { value: 'Under 2.5', odd: '1.85' }] }, { id: 8, name: 'Both Teams Score', values: [{ value: 'Yes', odd: '1.80' }, { value: 'No', odd: '2.00' }] }] }] }]
   if (path === '/standings') return [{ league: { standings: [[1, 2, 3, 4, 5, 6].map((id, i) => ({ rank: i + 1, team: team(id), points: 60 - i * 4, goalsDiff: 20 - i * 3, all: { played: 30 }, description: i === 0 ? 'Promotion - Libertadores' : null }))] } }]
   if (path === '/players') {
     const teamId = Number(q.get('team'))
@@ -116,8 +116,22 @@ function football(path, q) {
   return []
 }
 
+function ticketsAnswer(user) {
+  const ps = user.partidas
+  const sel = (p, mercado, codigo, prob) => ({ fixture_id: p.fixture_id, mercado, codigo, probabilidade_estimada: prob, justificativa: `Base: ${p.resumo}` })
+  const content = {
+    bilhetes: [
+      { titulo: 'Bilhete conservador', risco: 'baixo', resumo: 'Seleções de maior probabilidade. Lucro garantido.', selecoes: ps.slice(0, 2).map((p) => sel(p, 'Mais de 1.5 gols', 'mais_1_5', 70)) },
+      { titulo: 'Bilhete equilibrado', risco: 'medio', resumo: 'Mistura resultado e gols.', selecoes: [sel(ps[0], 'Vitória do mandante', 'casa', 48), ...(ps[1] ? [sel(ps[1], 'Ambos marcam', 'ambos_sim', 55)] : []), { fixture_id: 999999, mercado: 'Inventado', codigo: 'casa', probabilidade_estimada: 90, justificativa: 'x' }] },
+    ],
+    observacoes: ['Escalações não confirmadas.'],
+  }
+  return { choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(content) } }], usage: { total_tokens: 2000 } }
+}
+
 function openai(body) {
   const user = JSON.parse(body.messages[1].content)
+  if (user.partidas) return ticketsAnswer(user)
   const d = user.dados
   const s = user.suporte_por_secao
   const txt = (ok, t) => (ok ? t : null)
@@ -180,7 +194,7 @@ http
           res.statusCode = 400
           return res.end(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'pedido fora do formato esperado' } }))
         }
-        const text = openai({ messages: [{}, req.messages[0]] }).choices[0].message.content
+        const text = openai({ messages: [{ content: req.system }, req.messages[0]] }).choices[0].message.content
         return res.end(JSON.stringify({ id: 'msg_mock', type: 'message', role: 'assistant', model: req.model, content: [{ type: 'text', text }], stop_reason: 'end_turn', usage: { input_tokens: 6000, output_tokens: 1500 } }))
       }
       if (url.pathname === '/openai/v1/chat/completions') {

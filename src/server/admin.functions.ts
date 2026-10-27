@@ -139,23 +139,25 @@ export const verifyLeaguesFn = createServerFn({ method: 'POST' })
 // Configurações de coleta
 // ---------------------------------------------------------------------
 
-const SETTINGS_KEYS = ['collect_last_matches', 'collect_match_stats', 'collect_player_pages'] as const
+const SETTINGS_KEYS = ['collect_last_matches', 'collect_match_stats', 'collect_player_pages', 'auto_enabled', 'auto_max_analyses'] as const
 
 export const getSettings = createServerFn({ method: 'GET' })
   .middleware([requireAdmin])
   .handler(async () => {
     const { data } = await supabaseAdmin().from('app_settings').select('key, value')
-    return Object.fromEntries((data ?? []).map((r) => [r.key, Number(r.value)])) as Record<string, number>
+    return Object.fromEntries((data ?? []).map((r) => [r.key, typeof r.value === 'boolean' ? (r.value ? 1 : 0) : Number(r.value)])) as Record<string, number>
   })
 
 export const updateSettings = createServerFn({ method: 'POST' })
   .middleware([requireAdmin])
-  .validator((d: Partial<Record<(typeof SETTINGS_KEYS)[number], number>>) =>
+  .validator((d: Partial<Record<(typeof SETTINGS_KEYS)[number], number | boolean>>) =>
     z
       .object({
         collect_last_matches: z.number().int().min(1).max(20).optional(),
         collect_match_stats: z.number().int().min(0).max(10).optional(),
         collect_player_pages: z.number().int().min(0).max(5).optional(),
+        auto_enabled: z.boolean().optional(),
+        auto_max_analyses: z.number().int().min(0).max(50).optional(),
       })
       .parse(d),
   )

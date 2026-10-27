@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bot, CalendarDays, CircleCheck, CircleX, Database, DownloadCloud, Flag, Loader2, Play, Plus, RefreshCw, Settings, ShieldCheck, Square, Wand2 } from 'lucide-react'
+import { Bot, Layers, CalendarDays, CircleCheck, CircleX, Database, DownloadCloud, Flag, Loader2, Play, Plus, RefreshCw, Settings, ShieldCheck, Square, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/common/page-header'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +20,7 @@ import { seo } from '@/lib/seo'
 import { cn } from '@/lib/utils'
 import { addLeague, adminOverview, getSettings, listLeagues, syncFixtures, updateLeague, updateSettings, verifyLeaguesFn, type AdminFixture } from '@/server/admin.functions'
 import { generateAnalysis } from '@/server/analysis.functions'
+import { generateReadyTickets } from '@/server/ready-tickets.functions'
 import { collectCornersForFixture } from '@/server/corners.functions'
 
 export const Route = createFileRoute('/admin')({
@@ -92,6 +93,17 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
   const stopRef = React.useRef(false)
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['admin-overview'] })
+
+  const tickets = useMutation({
+    mutationFn: () => generateReadyTickets({ data: { date } }),
+    onSuccess: (r) => {
+      if (r.ok) toast.success(`${r.tickets} bilhete(s) gerado(s). Veja em Bilhetes prontos.`)
+      else toast.error(r.error)
+      refresh()
+      queryClient.invalidateQueries({ queryKey: ['ready-tickets'] })
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  })
 
   const sync = useMutation({
     mutationFn: () => syncFixtures({ data: { date } }),
@@ -196,6 +208,9 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
               </Button>
               <Button variant="dark" onClick={generateAll} disabled={!!batch || limitReached || !data?.config.ai || !data?.config.football}>
                 <Wand2 /> Gerar análises do dia
+              </Button>
+              <Button variant="outline" onClick={() => tickets.mutate()} disabled={!!batch || tickets.isPending || !data?.config.ai}>
+                {tickets.isPending ? <Loader2 className="animate-spin" /> : <Layers />} Gerar bilhetes do dia
               </Button>
               <Button variant="outline" onClick={collectCorners} disabled={!!batch || !data?.config.football}>
                 <Flag /> Coletar escanteios
@@ -310,7 +325,7 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
               {data.runs.map((r) => (
                 <li key={r.id as string} className="flex flex-wrap items-center gap-2 py-2">
                   {r.status === 'ok' ? <CircleCheck className="size-4 text-green-600" /> : <CircleX className="size-4 text-red-600" />}
-                  <span className="font-semibold">{({ sync: 'Sincronização', generate: 'Geração', collect: 'Coleta', leagues: 'Campeonatos' } as Record<string, string>)[r.kind as string] ?? r.kind}</span>
+                  <span className="font-semibold">{({ sync: 'Sincronização', generate: 'Geração', collect: 'Coleta', leagues: 'Campeonatos', tickets: 'Bilhetes', auto: 'Automação' } as Record<string, string>)[r.kind as string] ?? r.kind}</span>
                   {r.fixture_id ? <span className="text-muted-foreground">#{r.fixture_id as number}</span> : null}
                   <span className="text-xs text-muted-foreground">{formatDateTime(r.created_at as string)}</span>
                   <span className="w-full truncate text-xs text-muted-foreground sm:w-auto sm:flex-1">{summarizeRun(r.details as Record<string, unknown>)}</span>
@@ -443,6 +458,8 @@ function SettingsPanel() {
           collect_last_matches: form.collect_last_matches,
           collect_match_stats: form.collect_match_stats,
           collect_player_pages: form.collect_player_pages,
+          auto_enabled: !!form.auto_enabled,
+          auto_max_analyses: form.auto_max_analyses,
         },
       }),
     onSuccess: () => {
@@ -457,6 +474,34 @@ function SettingsPanel() {
     { key: 'collect_player_pages', label: 'Páginas de jogadores por equipe', help: 'Finalizadores da temporada, 20 jogadores por página (0 a 5).', min: 0, max: 5 },
   ]
   return (
+    <div className="space-y-6">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Automação diária</CardTitle>
+        <CardDescription>
+          Roda sozinha no GitHub Actions às 08h05 e às 14h05 (Brasília): busca os jogos do dia, gera as análises das partidas prioritárias que ainda não começaram e monta os
+          bilhetes prontos. Também pode ser disparada em GitHub › Actions › “Automação diária” › Run workflow.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-5 md:grid-cols-3">
+        <div className="flex items-center gap-3">
+          <Switch id="auto_enabled" checked={!!form.auto_enabled} onCheckedChange={(v) => setForm((s) => ({ ...s, auto_enabled: v ? 1 : 0 }))} />
+          <Label htmlFor="auto_enabled">Automação ligada</Label>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="auto_max_analyses">Análises por execução</Label>
+          <Input
+            id="auto_max_analyses"
+            type="number"
+            min={0}
+            max={50}
+            value={form.auto_max_analyses ?? ''}
+            onChange={(e) => setForm((s) => ({ ...s, auto_max_analyses: Math.max(0, Math.min(50, Number(e.target.value))) }))}
+          />
+          <p className="text-xs text-muted-foreground">Cada análise usa cerca de 20–25 consultas da API-Football. No plano gratuito (100/dia), use no máximo 3.</p>
+        </div>
+      </CardContent>
+    </Card>
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Profundidade da coleta</CardTitle>
@@ -479,10 +524,11 @@ function SettingsPanel() {
             <p className="text-xs text-muted-foreground">{f.help}</p>
           </div>
         ))}
-        <Button className="justify-self-start" onClick={() => save.mutate()} disabled={save.isPending || settings.isLoading}>
-          Salvar
-        </Button>
       </CardContent>
     </Card>
+    <Button onClick={() => save.mutate()} disabled={save.isPending || settings.isLoading}>
+      Salvar configurações
+    </Button>
+    </div>
   )
 }

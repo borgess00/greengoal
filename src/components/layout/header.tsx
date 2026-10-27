@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Crown, LogOut, Menu, Settings, Shield, Ticket, UserRound, Info } from 'lucide-react'
+import { CalendarDays, Crown, Layers, LogOut, Menu, Settings, Shield, Ticket, UserRound, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Logo } from './logo'
@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 
 const NAV = [
   { to: '/jogos', label: 'Jogos do dia', icon: CalendarDays },
+  { to: '/bilhetes-prontos', label: 'Bilhetes prontos', icon: Layers },
   { to: '/bilhete', label: 'Conferir bilhete', icon: Ticket },
   { to: '/planos', label: 'Planos', icon: Crown },
   { to: '/sobre', label: 'Sobre', icon: Info },

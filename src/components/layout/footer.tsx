@@ -25,6 +25,7 @@ export function Footer() {
           title="Produto"
           links={[
             { to: '/jogos', label: 'Jogos do dia' },
+            { to: '/bilhetes-prontos', label: 'Bilhetes prontos' },
             { to: '/bilhete', label: 'Conferir bilhete' },
             { to: '/escanteios', label: 'Radar de escanteios' },
             { to: '/planos', label: 'Planos' },

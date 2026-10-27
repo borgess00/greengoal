@@ -299,36 +299,52 @@ export function topShooters(entries: ApiPlayerEntry[], teamId: number, leagueId:
 export interface ImpliedMarket {
   market: string
   bookmaker: string
-  options: Array<{ label: string; odd: number; implied: number }>
+  options: Array<{ label: string; code: string; odd: number; implied: number }>
   margin: number
 }
 
-const ODDS_MARKETS: Record<string, { name: string; values?: string[]; labels?: Record<string, string> }> = {
-  'Match Winner': { name: 'Resultado final', labels: { Home: 'Casa', Draw: 'Empate', Away: 'Fora' } },
-  'Both Teams Score': { name: 'Ambos marcam', labels: { Yes: 'Sim', No: 'Não' } },
-  'Goals Over/Under': { name: 'Gols — linha 2.5', values: ['Over 2.5', 'Under 2.5'], labels: { 'Over 2.5': 'Mais de 2.5', 'Under 2.5': 'Menos de 2.5' } },
-  'Double Chance': { name: 'Dupla chance', labels: { 'Home/Draw': '1X', 'Draw/Away': 'X2', 'Home/Away': '12' } },
+interface OddsMarketCfg {
+  bet: string
+  name: string
+  values: Record<string, { label: string; code: string }>
+  /** Dupla chance: cada opção cobre dois resultados. */
+  double?: boolean
 }
+
+const ODDS_MARKETS: OddsMarketCfg[] = [
+  { bet: 'Match Winner', name: 'Resultado final', values: { Home: { label: 'Casa', code: 'casa' }, Draw: { label: 'Empate', code: 'empate' }, Away: { label: 'Fora', code: 'fora' } } },
+  { bet: 'Double Chance', name: 'Dupla chance', double: true, values: { 'Home/Draw': { label: '1X', code: '1X' }, 'Draw/Away': { label: 'X2', code: 'X2' }, 'Home/Away': { label: '12', code: '12' } } },
+  { bet: 'Both Teams Score', name: 'Ambos marcam', values: { Yes: { label: 'Sim', code: 'ambos_sim' }, No: { label: 'Não', code: 'ambos_nao' } } },
+  ...(['1.5', '2.5', '3.5'] as const).map((line) => ({
+    bet: 'Goals Over/Under',
+    name: `Gols — linha ${line}`,
+    values: {
+      [`Over ${line}`]: { label: `Mais de ${line}`, code: `mais_${line.replace('.', '_')}` },
+      [`Under ${line}`]: { label: `Menos de ${line}`, code: `menos_${line.replace('.', '_')}` },
+    },
+  })),
+]
 
 export function impliedMarkets(odds: ApiOdds | null): ImpliedMarket[] {
   const books = odds?.bookmakers ?? []
   if (!books.length) return []
   const out: ImpliedMarket[] = []
-  for (const [betName, cfg] of Object.entries(ODDS_MARKETS)) {
+  for (const cfg of ODDS_MARKETS) {
     for (const b of books) {
-      const bet = b.bets.find((x) => x.name === betName)
+      const bet = b.bets.find((x) => x.name === cfg.bet)
       if (!bet) continue
-      const values = bet.values.filter((v) => !cfg.values || cfg.values.includes(v.value))
-      const parsed = values.map((v) => ({ label: cfg.labels?.[v.value] ?? v.value, odd: Number(v.odd) })).filter((v) => v.odd > 1)
+      const parsed = bet.values
+        .filter((v) => cfg.values[v.value])
+        .map((v) => ({ ...cfg.values[v.value], odd: Number(v.odd) }))
+        .filter((v) => v.odd > 1)
       if (parsed.length < 2) continue
       const rawSum = parsed.reduce((a, v) => a + 1 / v.odd, 0)
-      // Dupla chance não soma 100%: cada opção cobre dois resultados.
-      const norm = betName === 'Double Chance' ? rawSum / 2 : rawSum
+      const norm = cfg.double ? rawSum / 2 : rawSum
       out.push({
         market: cfg.name,
         bookmaker: b.name,
         margin: round((norm - 1) * 100, 1),
-        options: parsed.map((v) => ({ label: v.label, odd: v.odd, implied: round((1 / v.odd / norm) * 100, 1) })),
+        options: parsed.map((v) => ({ label: v.label, code: v.code, odd: v.odd, implied: round((1 / v.odd / norm) * 100, 1) })),
       })
       break
     }

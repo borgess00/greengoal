@@ -260,6 +260,37 @@ await step('Limite diário global: lote para no teto', async () => {
   await ctx.close()
 })
 
+await step('Bilhetes prontos: gerados pela IA com odds, só para assinantes', async () => {
+  // Coloca as partidas analisadas no futuro para que entrem nos bilhetes.
+  const later = new Date(Date.now() + 3 * 3600_000).toISOString()
+  await admin.from('fixtures').update({ kickoff_at: later, status_short: 'NS' }).in('id', fixtureIds)
+  const ctx = await adultCtx()
+  const page = await ctx.newPage()
+  await login(page, ADMIN_EMAIL)
+  await page.goto(`${BASE}/admin`)
+  await page.waitForLoadState('networkidle')
+  await page.getByRole('button', { name: 'Gerar bilhetes do dia' }).click()
+  await page.getByText(/bilhete\(s\) gerado\(s\)/).waitFor({ timeout: 30000 })
+  const { data } = await admin.from('daily_tickets').select('status, content').eq('grade_date', grade).single()
+  assert.equal(data.status, 'done')
+  const txt = JSON.stringify(data.content)
+  assert.ok(!txt.includes('Lucro garantido'), 'promessa deveria ser removida')
+  assert.ok(!txt.includes('999999'), 'jogo inventado deveria ser descartado')
+  const baixo = data.content.bilhetes.find((b) => b.risco === 'baixo')
+  assert.ok(baixo.odd_total > 1, 'odd total deveria ser calculada')
+  await page.goto(`${BASE}/bilhetes-prontos`)
+  await page.getByText('Bilhete conservador').waitFor({ timeout: 15000 })
+  await page.screenshot({ path: `${SHOTS}/bilhetes-prontos.png`, fullPage: true })
+  await ctx.close()
+
+  const visitor = await adultCtx()
+  const vp = await visitor.newPage()
+  await vp.goto(`${BASE}/bilhetes-prontos`)
+  await vp.getByText('Recurso exclusivo para assinantes').waitFor()
+  assert.ok(!(await vp.content()).includes('Bilhete conservador'))
+  await visitor.close()
+})
+
 await step('Radar de escanteios e jogos do dia no celular', async () => {
   const ctx = await adultCtx({ width: 390, height: 844 })
   const page = await ctx.newPage()

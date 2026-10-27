@@ -87,28 +87,34 @@ function userMessage(facts: Facts, support: SectionSupport) {
   })
 }
 
-function parseAnalysis(content: string | null | undefined): AiAnalysis {
+function parseJson(content: string | null | undefined): unknown {
   if (!content) throw new Error('Resposta vazia da IA.')
-  let parsed: unknown
   try {
-    parsed = JSON.parse(content)
+    return JSON.parse(content)
   } catch {
     throw new Error('A IA retornou JSON inválido.')
   }
-  if (!isAiAnalysis(parsed)) throw new Error('A resposta da IA não segue o formato esperado.')
-  return parsed
 }
 
 // Modelos com fallback no servidor quando a IA recusa um pedido.
 const SERVER_FALLBACK = /^claude-(opus-5|fable-5|sonnet-5-5)/
 
-async function generateWithClaude(facts: Facts, support: SectionSupport) {
+interface StructuredRequest {
+  name: string
+  system: string
+  user: string
+  schema: Record<string, unknown>
+  /** Limite de saída (OpenAI); no Claude usamos 16000. */
+  maxTokens?: number
+}
+
+async function structuredWithClaude(req: StructuredRequest) {
   const model = aiModel()
   const client = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY!.trim(),
     // ANTHROPIC_BASE_URL só para testes locais (servidor simulado).
     baseURL: process.env.ANTHROPIC_BASE_URL?.trim() || undefined,
-    timeout: 120_000,
+    timeout: 240_000,
     maxRetries: 2,
   })
   const fallback = SERVER_FALLBACK.test(model)
@@ -116,18 +122,18 @@ async function generateWithClaude(facts: Facts, support: SectionSupport) {
     const response = await client.beta.messages.create({
       model,
       max_tokens: 16000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMessage(facts, support) }],
-      output_config: { effort: 'medium', format: { type: 'json_schema', schema: toAnthropicSchema(AI_RESPONSE_SCHEMA) } },
+      system: req.system,
+      messages: [{ role: 'user', content: req.user }],
+      output_config: { effort: 'medium', format: { type: 'json_schema', schema: toAnthropicSchema(req.schema) } },
       ...(fallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
     })
-    if (response.stop_reason === 'refusal') throw new Error('A IA recusou gerar a análise.')
+    if (response.stop_reason === 'refusal') throw new Error('A IA recusou o pedido.')
     if (response.stop_reason === 'max_tokens') throw new Error('Resposta da IA truncada (limite de tokens).')
     const text = response.content
       .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')
       .map((b) => b.text)
       .join('')
-    return { analysis: parseAnalysis(text), model: response.model, usage: response.usage }
+    return { json: parseJson(text), model: response.model, usage: response.usage as unknown }
   } catch (e) {
     if (e instanceof Anthropic.AuthenticationError) throw new Error('ANTHROPIC_API_KEY inválida.')
     if (e instanceof Anthropic.PermissionDeniedError) throw new Error('A chave do Claude não tem permissão para este modelo.')
@@ -138,35 +144,25 @@ async function generateWithClaude(facts: Facts, support: SectionSupport) {
   }
 }
 
-export async function generateAiAnalysis(facts: Facts, support: SectionSupport): Promise<{ analysis: AiAnalysis; model: string; usage: unknown }> {
-  const p = provider()
-  if (!p) throw new Error('Nenhuma chave de IA configurada (ANTHROPIC_API_KEY ou OPENAI_API_KEY).')
-  if (p === 'anthropic') return generateWithClaude(facts, support)
-
+async function structuredWithOpenAI(req: StructuredRequest) {
   const key = process.env.OPENAI_API_KEY!.trim()
   const model = aiModel()
-  const user = userMessage(facts, support)
-
   const base = process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1'
   const res = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    signal: AbortSignal.timeout(90_000),
+    signal: AbortSignal.timeout(180_000),
     body: JSON.stringify({
       model,
       temperature: 0.3,
-      max_tokens: 3500,
+      max_tokens: req.maxTokens ?? 3500,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: user },
+        { role: 'system', content: req.system },
+        { role: 'user', content: req.user },
       ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: { name: 'greengoal_analysis', strict: true, schema: AI_RESPONSE_SCHEMA },
-      },
+      response_format: { type: 'json_schema', json_schema: { name: req.name, strict: true, schema: req.schema } },
     }),
   })
-
   if (!res.ok) {
     let detail = ''
     try {
@@ -177,13 +173,30 @@ export async function generateAiAnalysis(facts: Facts, support: SectionSupport):
     }
     throw new Error(`OpenAI respondeu ${res.status}${detail ? `: ${detail}` : ''}`)
   }
-
   const body = (await res.json()) as {
     choices?: Array<{ message?: { content?: string | null; refusal?: string | null }; finish_reason?: string }>
     usage?: unknown
   }
   const choice = body.choices?.[0]
-  if (choice?.message?.refusal) throw new Error('A IA recusou gerar a análise.')
+  if (choice?.message?.refusal) throw new Error('A IA recusou o pedido.')
   if (choice?.finish_reason === 'length') throw new Error('Resposta da IA truncada (limite de tokens).')
-  return { analysis: parseAnalysis(choice?.message?.content), model, usage: body.usage }
+  return { json: parseJson(choice?.message?.content), model, usage: body.usage }
+}
+
+/** Chamada à IA com resposta em JSON estruturado (Claude ou OpenAI). */
+export async function structuredCall(req: StructuredRequest) {
+  const p = provider()
+  if (!p) throw new Error('Nenhuma chave de IA configurada (ANTHROPIC_API_KEY ou OPENAI_API_KEY).')
+  return p === 'anthropic' ? structuredWithClaude(req) : structuredWithOpenAI(req)
+}
+
+export async function generateAiAnalysis(facts: Facts, support: SectionSupport): Promise<{ analysis: AiAnalysis; model: string; usage: unknown }> {
+  const { json, model, usage } = await structuredCall({
+    name: 'greengoal_analysis',
+    system: SYSTEM_PROMPT,
+    user: userMessage(facts, support),
+    schema: AI_RESPONSE_SCHEMA as unknown as Record<string, unknown>,
+  })
+  if (!isAiAnalysis(json)) throw new Error('A resposta da IA não segue o formato esperado.')
+  return { analysis: json, model, usage }
 }
