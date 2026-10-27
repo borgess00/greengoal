@@ -23,6 +23,7 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as ApiSaudeRouteImport } from './routes/api/saude'
 import { Route as JogoIdRouteImport } from './routes/jogo.$id'
 import { Route as ApiAsaasWebhookRouteImport } from './routes/api/asaas/webhook'
 
@@ -96,6 +97,11 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSaudeRoute = ApiSaudeRouteImport.update({
+  id: '/api/saude',
+  path: '/api/saude',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JogoIdRoute = JogoIdRouteImport.update({
   id: '/jogo/$id',
   path: '/jogo/$id',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/api/saude': typeof ApiSaudeRoute
   '/jogo/$id': typeof JogoIdRoute
   '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/api/saude': typeof ApiSaudeRoute
   '/jogo/$id': typeof JogoIdRoute
   '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/api/saude': typeof ApiSaudeRoute
   '/jogo/$id': typeof JogoIdRoute
   '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sobre'
     | '/termos'
+    | '/api/saude'
     | '/jogo/$id'
     | '/api/asaas/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sobre'
     | '/termos'
+    | '/api/saude'
     | '/jogo/$id'
     | '/api/asaas/webhook'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sobre'
     | '/termos'
+    | '/api/saude'
     | '/jogo/$id'
     | '/api/asaas/webhook'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
+  ApiSaudeRoute: typeof ApiSaudeRoute
   JogoIdRoute: typeof JogoIdRoute
   ApiAsaasWebhookRoute: typeof ApiAsaasWebhookRoute
 }
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/saude': {
+      id: '/api/saude'
+      path: '/api/saude'
+      fullPath: '/api/saude'
+      preLoaderRoute: typeof ApiSaudeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jogo/$id': {
       id: '/jogo/$id'
       path: '/jogo/$id'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
+  ApiSaudeRoute: ApiSaudeRoute,
   JogoIdRoute: JogoIdRoute,
   ApiAsaasWebhookRoute: ApiAsaasWebhookRoute,
 }

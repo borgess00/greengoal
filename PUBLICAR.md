@@ -47,6 +47,11 @@ Você precisa de duas coisas: um **banco Supabase** (ou o Lovable Cloud, que é 
 
    As variáveis `VITE_` entram no build: depois de mudá-las, faça um novo deploy.
 4. Aponte seu domínio para o serviço (Settings › Custom Domains).
+5. **Plano gratuito do Render**: o serviço dorme após ~15 min sem visitas e leva ~1 min para acordar.
+   Para mantê-lo acordado, crie um monitor HTTP gratuito no UptimeRobot apontando para
+   `https://SEU-SITE/api/saude` a cada 5 minutos (resposta leve, sem banco).
+6. Ao trocar de hospedagem, atualize também: Supabase › Authentication › URL Configuration
+   (Site URL e Redirect URLs), a variável `VITE_SITE_URL` e a URL do webhook no Asaas.
 
 > Não cadastre `API_FOOTBALL_BASE_URL`, `OPENAI_BASE_URL` nem `ANTHROPIC_BASE_URL` em produção — servem só para os testes locais.
 
