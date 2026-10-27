@@ -35,7 +35,7 @@ import { FALLBACK_PLANS } from '@/lib/plans'
 import { seo } from '@/lib/seo'
 import { SITE } from '@/lib/site'
 import { isSubscriptionValid, type PaymentRow, type PlanRow } from '@/lib/types'
-import { cancelSubscription, resumeSubscription } from '@/server/billing.functions'
+import { cancelPendingOrder, cancelSubscription, resumeSubscription } from '@/server/billing.functions'
 import { getPlans } from '@/server/plans.functions'
 
 export const Route = createFileRoute('/perfil')({
@@ -214,6 +214,54 @@ function AssinaturaTab() {
   const [changeTo, setChangeTo] = React.useState<PlanRow | null>(null)
   const sub = me?.subscription ?? null
   const valid = isSubscriptionValid(sub)
+  const { user } = useMe()
+  const pending = useQuery({
+    queryKey: ['pending-order', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('id, plan_id, created_at, plans(name), payments(invoice_url, status, due_date)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      return data as unknown as { id: string; plan_id: string; plans: { name: string } | null; payments: Array<{ invoice_url: string | null; status: string; due_date: string | null }> } | null
+    },
+  })
+  const dropOrder = useMutation({
+    mutationFn: () => cancelPendingOrder(),
+    onSuccess: () => {
+      toast.success('Pedido cancelado.')
+      queryClient.invalidateQueries({ queryKey: ['pending-order'] })
+      queryClient.invalidateQueries({ queryKey: ['me'] })
+      queryClient.invalidateQueries({ queryKey: ['payments'] })
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  })
+  const pendingCard = pending.data ? (
+    <Card className="mb-6 border-amber-300 bg-amber-50/60">
+      <CardHeader>
+        <CardTitle className="text-lg">Pedido aguardando pagamento — plano {pending.data.plans?.name}</CardTitle>
+        <CardDescription>O acesso é liberado automaticamente assim que o Asaas confirmar o pagamento. No Pix, costuma levar poucos segundos.</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-2">
+        {pending.data.payments.find((p) => p.invoice_url && p.status !== 'canceled')?.invoice_url && (
+          <Button asChild>
+            <a href={pending.data.payments.find((p) => p.invoice_url && p.status !== 'canceled')!.invoice_url!} target="_blank" rel="noopener noreferrer">
+              Pagar agora
+            </a>
+          </Button>
+        )}
+        <Button variant="outline" onClick={() => pending.refetch().then(() => queryClient.invalidateQueries({ queryKey: ['me'] }))}>
+          Já paguei — atualizar
+        </Button>
+        <Button variant="ghost" onClick={() => dropOrder.mutate()} disabled={dropOrder.isPending}>
+          Desistir do pedido
+        </Button>
+      </CardContent>
+    </Card>
+  ) : null
 
   const cancel = useMutation({
     mutationFn: () => cancelSubscription(),
@@ -234,6 +282,8 @@ function AssinaturaTab() {
 
   if (!sub || !valid) {
     return (
+      <>
+      {pendingCard}
       <EmptyState
         icon={ShieldCheck}
         title={sub ? 'Sua assinatura não está ativa' : 'Você ainda não tem assinatura'}
@@ -244,11 +294,14 @@ function AssinaturaTab() {
           </Button>
         }
       />
+      </>
     )
   }
 
   const days = daysUntil(sub.current_period_end)
   return (
+    <>
+    {pendingCard}
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
       <Card>
         <CardHeader>
@@ -269,12 +322,16 @@ function AssinaturaTab() {
               </p>
             </div>
           </div>
-          {sub.provider === 'demo' && (
+          {sub.provider === 'demo' ? (
             <p className="text-sm text-muted-foreground">Assinatura de demonstração: nenhuma cobrança foi feita e não há renovação automática.</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {sub.cancel_at_period_end ? 'Renovação cancelada: não haverá novas cobranças.' : 'Renovação automática pelo Asaas. Cancele quando quiser; o acesso segue até o vencimento.'}
+            </p>
           )}
           {sub.cancel_at_period_end ? (
             <Button variant="outline" onClick={() => resume.mutate()} disabled={resume.isPending}>
-              Manter assinatura
+              {sub.provider === 'asaas' ? 'Retomar renovação' : 'Manter assinatura'}
             </Button>
           ) : (
             <AlertDialog>
@@ -304,7 +361,7 @@ function AssinaturaTab() {
       <Card>
         <CardHeader>
           <CardTitle>Trocar de plano</CardTitle>
-          <CardDescription>O novo plano começa agora e substitui o atual.</CardDescription>
+          <CardDescription>O novo plano substitui o atual assim que for ativado (no Asaas, após o pagamento).</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           {plans.map((p) => (
@@ -325,13 +382,16 @@ function AssinaturaTab() {
       </Card>
       <CheckoutDialog plan={changeTo} open={!!changeTo} onOpenChange={(o) => !o && setChangeTo(null)} replacing />
     </div>
+    </>
   )
 }
 
-const METHOD: Record<PaymentRow['method'], string> = { card: 'Cartão', pix: 'Pix' }
+const METHOD: Record<PaymentRow['method'], string> = { card: 'Cartão', pix: 'Pix', boleto: 'Boleto' }
 const STATUS: Record<PaymentRow['status'], { label: string; variant: 'success' | 'warning' | 'danger' | 'muted' | 'outline' }> = {
   demo: { label: 'Demonstração', variant: 'outline' },
-  pending: { label: 'Pendente', variant: 'warning' },
+  pending: { label: 'Aguardando pagamento', variant: 'warning' },
+  overdue: { label: 'Vencido', variant: 'danger' },
+  canceled: { label: 'Cancelado', variant: 'muted' },
   paid: { label: 'Pago', variant: 'success' },
   failed: { label: 'Falhou', variant: 'danger' },
   refunded: { label: 'Estornado', variant: 'muted' },
@@ -345,7 +405,7 @@ function PagamentosTab() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payments')
-        .select('id, plan_id, amount_cents, currency, method, status, provider, created_at, plans(name)')
+        .select('id, plan_id, amount_cents, currency, method, status, provider, invoice_url, due_date, created_at, plans(name)')
         .order('created_at', { ascending: false })
         .limit(100)
       if (error) throw new Error('Não foi possível carregar os pagamentos.')
@@ -376,14 +436,21 @@ function PagamentosTab() {
                   <td className="px-5 py-3">{METHOD[p.method]}</td>
                   <td className="px-5 py-3 text-right font-semibold tabular">{formatBRL(p.amount_cents)}</td>
                   <td className="px-5 py-3">
-                    <Badge variant={STATUS[p.status].variant}>{STATUS[p.status].label}</Badge>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <Badge variant={STATUS[p.status].variant}>{STATUS[p.status].label}</Badge>
+                      {(p.status === 'pending' || p.status === 'overdue') && p.invoice_url && (
+                        <a href={p.invoice_url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-primary hover:underline">
+                          Pagar
+                        </a>
+                      )}
+                    </span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="border-t px-5 py-3 text-xs text-muted-foreground">Registros com status “Demonstração” não envolveram cobrança.</p>
+        <p className="border-t px-5 py-3 text-xs text-muted-foreground">Registros com status “Demonstração” não envolveram cobrança. Pagamentos reais são processados pelo Asaas.</p>
       </CardContent>
     </Card>
   )

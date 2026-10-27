@@ -10,6 +10,7 @@ import http from 'node:http'
 
 const PORT = Number(process.env.MOCK_PORT ?? 4010)
 const calls = []
+const asaas = { n: 1, subs: {}, last: null }
 
 const TEAMS = {
   1: 'Palmeiras', 2: 'Flamengo', 3: 'Arsenal', 4: 'Chelsea', 5: 'Botafogo', 6: 'Grêmio', 7: 'Time Fora da Lista', 8: 'Outro Time',
@@ -184,6 +185,43 @@ http
         calls.push(path + url.search)
         res.setHeader('x-ratelimit-requests-remaining', String(7500 - calls.length))
         return res.end(JSON.stringify({ errors: [], response: football(path, url.searchParams) }))
+      }
+      if (url.pathname.startsWith('/asaas/v3')) {
+        // Imita a API do Asaas (clientes, assinaturas e cobranças).
+        if (!req.headers['access_token']) {
+          res.statusCode = 401
+          return res.end(JSON.stringify({ errors: [{ description: 'token ausente' }] }))
+        }
+        const path = url.pathname.replace('/asaas/v3', '')
+        const data = body ? JSON.parse(body) : {}
+        calls.push(`asaas:${req.method} ${path}`)
+        if (req.method === 'POST' && path === '/customers') {
+          if (!data.cpfCnpj) {
+            res.statusCode = 400
+            return res.end(JSON.stringify({ errors: [{ description: 'CPF/CNPJ obrigatório' }] }))
+          }
+          return res.end(JSON.stringify({ id: 'cus_' + (asaas.n++) }))
+        }
+        if (req.method === 'POST' && path === '/subscriptions') {
+          const id = 'sub_' + (asaas.n++)
+          const pay = { id: 'pay_' + (asaas.n++), customer: data.customer, subscription: id, value: data.value, billingType: data.billingType, status: 'PENDING', dueDate: data.nextDueDate, invoiceUrl: `http://localhost:${PORT}/fatura/${id}` }
+          asaas.subs[id] = { ...data, id, payments: [pay] }
+          asaas.last = pay
+          return res.end(JSON.stringify({ id }))
+        }
+        const m = path.match(/^\/subscriptions\/([^/]+)(\/payments)?$/)
+        if (m && req.method === 'GET' && m[2]) return res.end(JSON.stringify({ data: asaas.subs[m[1]]?.payments ?? [] }))
+        if (m && req.method === 'DELETE') {
+          if (asaas.subs[m[1]]) asaas.subs[m[1]].deleted = true
+          return res.end(JSON.stringify({ deleted: true, id: m[1] }))
+        }
+        res.statusCode = 404
+        return res.end('{}')
+      }
+      if (url.pathname === '/__asaas') return res.end(JSON.stringify(asaas))
+      if (url.pathname.startsWith('/fatura/')) {
+        res.setHeader('content-type', 'text/html; charset=utf-8')
+        return res.end('<html><body><h1>Fatura Asaas (simulada)</h1></body></html>')
       }
       if (url.pathname === '/anthropic/v1/messages') {
         // Imita a Messages API da Anthropic (Claude) com saída estruturada.

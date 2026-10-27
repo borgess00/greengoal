@@ -87,9 +87,11 @@ export interface PaymentRow {
   plan_id: string | null
   amount_cents: number
   currency: string
-  method: 'card' | 'pix'
-  status: 'demo' | 'pending' | 'paid' | 'failed' | 'refunded'
+  method: 'card' | 'pix' | 'boleto'
+  status: 'demo' | 'pending' | 'paid' | 'overdue' | 'failed' | 'refunded' | 'canceled'
   provider: string
+  invoice_url: string | null
+  due_date: string | null
   created_at: string
 }
 

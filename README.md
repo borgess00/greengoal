@@ -87,6 +87,13 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 - **Radar de escanteios** (`/escanteios`, assinantes): todas as equipes da grade com amostra, sem limite de 3, com exportação de relatório vertical em PNG (verde e branco).
 - **Dados extras da análise**: classificação, desfalques informados, odds com probabilidade implícita sem margem, destaques por mercado com risco (baixo / médio / médio-alto), motivos a favor e contra, alertas.
 
+## Pagamentos (Asaas)
+
+- Com `ASAAS_API_KEY` configurada, a contratação é real: o site cria o cliente (CPF/CNPJ) e a assinatura no Asaas (ciclo semanal, mensal ou anual) e leva a pessoa à fatura do Asaas (Pix ou cartão). Sem a chave, continua o checkout demonstrativo.
+- O acesso é liberado **somente** pelo webhook `POST /api/asaas/webhook`, validado pelo cabeçalho `asaas-access-token` (= `ASAAS_WEBHOOK_TOKEN`). A função `asaas_confirm_payment` é idempotente: o mesmo pagamento nunca estende o acesso duas vezes; renovações somam ao vencimento.
+- Cancelar remove a assinatura no Asaas (sem novas cobranças) e mantém o acesso até o vencimento; "Retomar renovação" cria nova assinatura com primeira cobrança no vencimento. Estorno/contestação encerra o acesso.
+- Testes: `e2e/asaas.mjs` (6 cenários) contra o Asaas simulado.
+
 ## Automação e bilhetes prontos
 
 - **Bilhetes prontos** (`/bilhetes-prontos`, assinantes): a IA monta bilhetes do dia por nível de risco (baixo, médio, médio-alto) a partir das análises concluídas, com odd por seleção (quando a fonte informa), odd total e chance combinada estimada. Tabela `daily_tickets` com RLS igual à das análises. Cada geração consome 1 chamada do teto diário de IA.
@@ -95,7 +102,7 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 
 ## Pendências (não declarar como prontas)
 
-- **Pagamento real**: `startCheckout` é DEMONSTRAÇÃO — não cobra, cria assinatura e pagamento `demo`. Pagamento real e renovação automática exigem um provedor (Stripe, Mercado Pago…) com ativação por **webhook verificado**.
+- **Pagamento real**: integrado com o Asaas, mas só ativo depois de configurar `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` e o webhook no painel do Asaas. Validar com uma cobrança real (ou no sandbox) antes de abrir ao público.
 - **Offline**: há manifesto e ícones, mas não há service worker nem funcionamento offline.
 - **Integrações externas**: o código foi exercitado contra um mock local (`e2e/mock-apis.mjs`); ainda falta validar com jogos reais usando `API_FOOTBALL_KEY` e `OPENAI_API_KEY` reais.
 - **E-mail**: confirmar configurações de autenticação e entrega de e-mail no Lovable Cloud (confirmação de cadastro e recuperação de senha).

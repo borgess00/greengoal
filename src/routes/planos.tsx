@@ -15,6 +15,7 @@ import { seo } from '@/lib/seo'
 import type { PlanRow } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { getPlans } from '@/server/plans.functions'
+import { getBillingInfo } from '@/server/billing.functions'
 
 const plansQuery = queryOptions({ queryKey: ['plans'], queryFn: () => getPlans(), staleTime: 10 * 60_000 })
 
@@ -55,6 +56,8 @@ function PlanosPage() {
   }
 
   const active = me?.hasActiveSubscription ? me.subscription : null
+  const billing = useQuery({ queryKey: ['billing-info', user?.id], queryFn: () => getBillingInfo(), staleTime: 60_000 })
+  const real = billing.data?.mode === 'asaas'
 
   return (
     <>
@@ -113,9 +116,15 @@ function PlanosPage() {
         </div>
 
         <div className="mx-auto mt-10 max-w-2xl space-y-3 text-center text-sm text-muted-foreground">
-          <p>
-            <strong className="text-foreground">Pagamento em modo demonstração:</strong> nesta versão nenhuma cobrança é feita. A ativação libera o acesso para testes pelo prazo do plano, sem renovação automática.
-          </p>
+          {real ? (
+            <p>
+              <strong className="text-foreground">Pagamento seguro pelo Asaas</strong>, por Pix ou cartão. A assinatura renova automaticamente a cada período até você cancelar.
+            </p>
+          ) : (
+            <p>
+              <strong className="text-foreground">Pagamento em modo demonstração:</strong> nesta versão nenhuma cobrança é feita. A ativação libera o acesso para testes pelo prazo do plano, sem renovação automática.
+            </p>
+          )}
           <p>É necessário entrar na sua conta para assinar. Você pode cancelar quando quiser: o acesso continua até o fim do período.</p>
         </div>
         <RiskNotice className="mt-10" />

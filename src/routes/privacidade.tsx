@@ -14,7 +14,7 @@ export const Route = createFileRoute('/privacidade')({
           <h2>Dados que coletamos</h2>
           <ul>
             <li><strong>Cadastro:</strong> nome e e-mail; a senha é armazenada de forma criptografada pelo provedor de autenticação.</li>
-            <li><strong>Assinatura:</strong> plano, datas de início e vencimento, método escolhido (cartão ou Pix) e status dos registros de pagamento. Nesta versão não coletamos dados de cartão.</li>
+            <li><strong>Assinatura e pagamento:</strong> plano, datas de início e vencimento, método (cartão ou Pix), status dos pagamentos e CPF/CNPJ do pagador. Os pagamentos são processados pelo Asaas, que recebe nome, e-mail e CPF/CNPJ para emitir as cobranças. Os dados do cartão são digitados na página do Asaas e não passam pelo GreenGoal.</li>
             <li><strong>Uso:</strong> bilhetes que você envia para conferência e os resultados gerados.</li>
             <li><strong>Navegador:</strong> a confirmação de idade e a sessão de login ficam salvas no armazenamento local do seu navegador.</li>
           </ul>

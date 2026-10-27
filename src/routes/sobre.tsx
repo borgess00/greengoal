@@ -54,8 +54,8 @@ const FAQ = [
     a: 'Semanal (R$ 13,90), mensal (R$ 41,90) e anual (R$ 399,90, equivalente a R$ 33,33/mês). Todos liberam os mesmos recursos.',
   },
   {
-    q: 'O pagamento já é real?',
-    a: 'Ainda não. Nesta versão a contratação funciona em modo demonstração: nenhuma cobrança é feita e o acesso é liberado pelo prazo do plano apenas para testes. O pagamento real dependerá da integração com um provedor de pagamentos.',
+    q: 'Como funciona o pagamento?',
+    a: 'Os pagamentos são processados pelo Asaas, por Pix ou cartão, em uma página segura. O acesso é liberado assim que o pagamento é confirmado, e a assinatura renova automaticamente a cada período até você cancelar.',
   },
   {
     q: 'Posso cancelar quando quiser?',

@@ -32,9 +32,11 @@ export const Route = createFileRoute('/termos')({
           <ul>
             <li>Planos disponíveis: semanal, mensal e anual, com os mesmos recursos.</li>
             <li>
-              <strong>Nesta versão, a contratação funciona em modo demonstração</strong>: nenhuma cobrança é realizada e não há renovação automática. Quando o pagamento real for implantado, as
-              condições de cobrança, renovação e reembolso serão informadas antes da contratação.
+              Os pagamentos são processados pelo <strong>Asaas</strong>, por Pix ou cartão. A assinatura <strong>renova automaticamente</strong> ao fim de cada período, pelo mesmo valor, até
+              ser cancelada. Os valores e o período aparecem antes da confirmação.
             </li>
+            <li>O acesso é liberado após a confirmação do pagamento. Estornos e contestações encerram o acesso.</li>
+            <li>Enquanto o pagamento não estiver ativado no site, a contratação funciona em modo demonstração, sem cobrança, e isso é avisado na tela de contratação.</li>
             <li>O cancelamento interrompe a renovação e mantém o acesso até o fim do período vigente.</li>
           </ul>
           <h2>6. Uso aceitável</h2>

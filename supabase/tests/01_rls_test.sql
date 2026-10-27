@@ -92,6 +92,14 @@ do $$ begin
   raise exception 'usuário não pode se promover a admin';
 exception when insufficient_privilege then null; end $$;
 do $$ begin
+  perform public.asaas_confirm_payment('00000000-0000-0000-0000-0000000000f1', 'pay_x', 1, 'pix', null, current_date);
+  raise exception 'usuário não pode confirmar pagamento';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  perform count(*) from public.billing_customers;
+  raise exception 'usuário não pode ler billing_customers';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
   perform public.consume_ai_call();
   raise exception 'usuário não pode consumir cota de IA';
 exception when insufficient_privilege then null; end $$;
@@ -125,6 +133,27 @@ do $$ begin
   assert (select count(*) from public.analyses) = 1, 'admin deve ler análise';
 end $$;
 reset role;
+
+-- ---------- pagamento Asaas idempotente ----------
+insert into public.subscriptions (id, user_id, plan_id, status, current_period_start, current_period_end, provider, provider_ref)
+values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-00000000000c', 'monthly', 'pending', now(), now() + interval '1 minute', 'asaas', 'sub_test');
+do $$
+declare r1 text; r2 text; r3 text; _end timestamptz;
+begin
+  r1 := public.asaas_confirm_payment('00000000-0000-0000-0000-0000000000f1', 'pay_1', 4190, 'pix', 'https://x/i/1', current_date);
+  select current_period_end into _end from public.subscriptions where id = '00000000-0000-0000-0000-0000000000f1';
+  r2 := public.asaas_confirm_payment('00000000-0000-0000-0000-0000000000f1', 'pay_1', 4190, 'pix', 'https://x/i/1', current_date);
+  r3 := public.asaas_confirm_payment('00000000-0000-0000-0000-0000000000ff', 'pay_2', 4190, 'pix', null, current_date);
+  assert r1 = 'extended', 'primeira confirmação deveria estender';
+  assert r2 = 'duplicate', 'confirmação repetida não pode estender de novo';
+  assert r3 = 'unknown_subscription';
+  assert (select current_period_end from public.subscriptions where id = '00000000-0000-0000-0000-0000000000f1') = _end, 'período mudou na duplicata';
+  assert _end > now() + interval '29 days' and _end < now() + interval '31 days', 'mensal deveria liberar 30 dias';
+  assert public.has_active_subscription('00000000-0000-0000-0000-00000000000c'), 'assinatura paga deveria estar ativa';
+  -- renovação: segundo pagamento soma a partir do vencimento atual
+  perform public.asaas_confirm_payment('00000000-0000-0000-0000-0000000000f1', 'pay_3', 4190, 'pix', null, current_date);
+  assert (select current_period_end from public.subscriptions where id = '00000000-0000-0000-0000-0000000000f1') > _end + interval '29 days', 'renovação deveria somar ao vencimento';
+end $$;
 
 -- ---------- limite diário global de IA ----------
 update public.app_settings set value = '3'::jsonb where key = 'ai_daily_limit';

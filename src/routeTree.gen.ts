@@ -24,6 +24,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as JogoIdRouteImport } from './routes/jogo.$id'
+import { Route as ApiAsaasWebhookRouteImport } from './routes/api/asaas/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -100,6 +101,11 @@ const JogoIdRoute = JogoIdRouteImport.update({
   path: '/jogo/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAsaasWebhookRoute = ApiAsaasWebhookRouteImport.update({
+  id: '/api/asaas/webhook',
+  path: '/api/asaas/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/jogo/$id': typeof JogoIdRoute
+  '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/jogo/$id': typeof JogoIdRoute
+  '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/jogo/$id': typeof JogoIdRoute
+  '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/jogo/$id'
+    | '/api/asaas/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/jogo/$id'
+    | '/api/asaas/webhook'
   id:
     | '__root__'
     | '/'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/jogo/$id'
+    | '/api/asaas/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   JogoIdRoute: typeof JogoIdRoute
+  ApiAsaasWebhookRoute: typeof ApiAsaasWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JogoIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/asaas/webhook': {
+      id: '/api/asaas/webhook'
+      path: '/api/asaas/webhook'
+      fullPath: '/api/asaas/webhook'
+      preLoaderRoute: typeof ApiAsaasWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -351,6 +371,7 @@ const rootRouteChildren: RootRouteChildren = {
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   JogoIdRoute: JogoIdRoute,
+  ApiAsaasWebhookRoute: ApiAsaasWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
