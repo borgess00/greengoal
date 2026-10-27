@@ -6,7 +6,7 @@ import { isValidDate, spToday } from '@/lib/grade'
 import type { AnalysisStatus, FixtureRow, LeagueRow } from '@/lib/types'
 import { requireAdmin } from './auth-middleware'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
-import { aiConfigured, aiModel } from './ai.server'
+import { aiConfigured, aiKeyName, aiModel } from './ai.server'
 import { footballConfigured, syncGrade, verifyLeagues } from './football.server'
 
 const dateInput = z.object({ date: z.string().refine(isValidDate, 'Data inválida') })
@@ -55,7 +55,7 @@ export const adminOverview = createServerFn({ method: 'GET' })
       date: data.date,
       fixtures,
       usage: { day: spToday(), used: (usage.data?.calls as number | undefined) ?? 0, limit: Number(limit.data?.value ?? 50) || 50 },
-      config: { football: footballConfigured(), ai: aiConfigured(), model: aiModel() },
+      config: { football: footballConfigured(), ai: aiConfigured(), model: aiModel(), aiKey: aiKeyName() },
       apiRemaining: lastRemaining as number | null,
       runs: runs.data ?? [],
     }

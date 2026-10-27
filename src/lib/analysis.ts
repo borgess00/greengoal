@@ -112,6 +112,24 @@ export const AI_RESPONSE_SCHEMA = {
   },
 } as const
 
+/**
+ * Adapta o esquema para a API do Claude: troca `type: [X, 'null']` por
+ * `anyOf`, forma mais segura nos esquemas estruturados.
+ */
+export function toAnthropicSchema(node: unknown): Record<string, unknown> {
+  const walk = (n: unknown): unknown => {
+    if (Array.isArray(n)) return n.map(walk)
+    if (!n || typeof n !== 'object') return n
+    const o = n as Record<string, unknown>
+    if (Array.isArray(o.type)) {
+      const { type, ...rest } = o
+      return { anyOf: (type as string[]).map((t) => ({ type: t })), ...Object.fromEntries(Object.entries(rest).map(([k, v]) => [k, walk(v)])) }
+    }
+    return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, walk(v)]))
+  }
+  return walk(node) as Record<string, unknown>
+}
+
 export function isAiAnalysis(v: unknown): v is AiAnalysis {
   if (!v || typeof v !== 'object') return false
   const o = v as Record<string, unknown>

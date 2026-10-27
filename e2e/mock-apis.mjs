@@ -5,6 +5,7 @@
 // Uso: node e2e/mock-apis.mjs  (porta 4010)
 //   API_FOOTBALL_BASE_URL=http://localhost:4010/football
 //   OPENAI_BASE_URL=http://localhost:4010/openai/v1
+//   ANTHROPIC_BASE_URL=http://localhost:4010/anthropic
 import http from 'node:http'
 
 const PORT = Number(process.env.MOCK_PORT ?? 4010)
@@ -145,6 +146,15 @@ http
     let body = ''
     req.on('data', (c) => (body += c))
     req.on('end', () => {
+      try {
+        handle()
+      } catch (e) {
+        console.error(e)
+        res.statusCode = 500
+        res.end(JSON.stringify({ error: String(e) }))
+      }
+    })
+    const handle = () => {
       res.setHeader('content-type', 'application/json')
       if (url.pathname === '/__calls') return res.end(JSON.stringify(calls))
       if (url.pathname.startsWith('/football')) {
@@ -154,12 +164,24 @@ http
         res.setHeader('x-ratelimit-requests-remaining', String(7500 - calls.length))
         return res.end(JSON.stringify({ errors: [], response: football(path, url.searchParams) }))
       }
+      if (url.pathname === '/anthropic/v1/messages') {
+        // Imita a Messages API da Anthropic (Claude) com saída estruturada.
+        const req = JSON.parse(body)
+        calls.push('anthropic')
+        const ok = req.output_config?.format?.type === 'json_schema' && !JSON.stringify(req.output_config.format.schema).includes('"type":["')
+        if (!req.model || !req.system || !ok) {
+          res.statusCode = 400
+          return res.end(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'pedido fora do formato esperado' } }))
+        }
+        const text = openai({ messages: [{}, req.messages[0]] }).choices[0].message.content
+        return res.end(JSON.stringify({ id: 'msg_mock', type: 'message', role: 'assistant', model: req.model, content: [{ type: 'text', text }], stop_reason: 'end_turn', usage: { input_tokens: 6000, output_tokens: 1500 } }))
+      }
       if (url.pathname === '/openai/v1/chat/completions') {
         calls.push('openai')
         return res.end(JSON.stringify(openai(JSON.parse(body))))
       }
       res.statusCode = 404
       res.end('{}')
-    })
+    }
   })
   .listen(PORT, () => console.log(`mock em http://localhost:${PORT}`))

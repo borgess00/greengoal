@@ -11,7 +11,7 @@ O GreenGoal é fonte de informação estatística — não promete lucro, ganho 
 - Tailwind CSS v4 + componentes no padrão shadcn/ui (Radix), Lucide e Sonner
 - Lovable Cloud (Supabase): autenticação, Postgres com RLS
 - Funções de servidor com `createServerFn`
-- API-Football (API-Sports) e OpenAI (`gpt-4.1-mini`) chamadas **somente no servidor**
+- API-Football (API-Sports) e IA (Claude via `@anthropic-ai/sdk`, ou OpenAI) chamadas **somente no servidor**
 
 ## Estrutura
 
@@ -22,7 +22,7 @@ src/
                           /privacidade, /jogo-responsavel) + 404 e tela de erro
   server/
     football.server.ts    helpers da API-Football (exclusivos do servidor)
-    ai.server.ts          geração estruturada com OpenAI (exclusivo do servidor)
+    ai.server.ts          geração estruturada com Claude ou OpenAI (exclusivo do servidor)
     access.server.ts      validação de token, papel e assinatura
     auth-middleware.ts    middlewares requireAuth / requireAdmin / requireSubscriber
     *.functions.ts        createServerFn (partidas, análises, admin, bilhete, planos, escanteios)
@@ -48,7 +48,9 @@ public/                   logo, ícones 192/512, manifesto, og-image
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` | público | cliente do navegador (preenchidas pelo Lovable Cloud) |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | **segredo do servidor** | operações privilegiadas após checagem de permissão |
 | `API_FOOTBALL_KEY` | **segredo do servidor** | API-Football |
-| `OPENAI_API_KEY` | **segredo do servidor** | chave própria do responsável (não usa a IA integrada do Lovable) |
+| `ANTHROPIC_API_KEY` | **segredo do servidor** | IA das análises com Claude (tem prioridade se existir) |
+| `ANTHROPIC_MODEL` | opcional | padrão `claude-opus-5-5`; ex.: `claude-sonnet-5-5`, `claude-haiku-5-5` |
+| `OPENAI_API_KEY` | **segredo do servidor** | alternativa: IA com OpenAI |
 | `OPENAI_MODEL` | opcional | padrão `gpt-4.1-mini` |
 
 Chaves privadas nunca vão para o navegador, para arquivos públicos ou para o repositório (`.env` está no `.gitignore`).

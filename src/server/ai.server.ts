@@ -1,18 +1,39 @@
-// Geração de análises com a OpenAI usando a chave do responsável pelo
-// projeto (OPENAI_API_KEY, segredo do servidor). Resposta estruturada em
-// JSON (json_schema estrito), em português do Brasil.
+// Geração das análises com IA, usando a chave do responsável pelo projeto
+// (segredo do servidor). Dois provedores:
+// - Claude (Anthropic): usado quando ANTHROPIC_API_KEY estiver configurada.
+//   Modelo em ANTHROPIC_MODEL (padrão claude-opus-5-5).
+// - OpenAI: usado quando só OPENAI_API_KEY existir. Modelo em OPENAI_MODEL
+//   (padrão gpt-4.1-mini).
+// Em ambos, a resposta é JSON estruturado (json_schema), em português do Brasil.
 
-import { AI_RESPONSE_SCHEMA, isAiAnalysis, type AiAnalysis } from '@/lib/analysis'
+import Anthropic from '@anthropic-ai/sdk'
+import { AI_RESPONSE_SCHEMA, isAiAnalysis, toAnthropicSchema, type AiAnalysis } from '@/lib/analysis'
 import type { Facts, SectionSupport } from '@/lib/facts'
 
 export const DEFAULT_MODEL = 'gpt-4.1-mini'
+export const DEFAULT_CLAUDE_MODEL = 'claude-opus-5-5'
+
+type Provider = 'anthropic' | 'openai'
+
+function provider(): Provider | null {
+  if (process.env.ANTHROPIC_API_KEY?.trim()) return 'anthropic'
+  if (process.env.OPENAI_API_KEY?.trim()) return 'openai'
+  return null
+}
 
 export function aiModel() {
-  return process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL
+  return provider() === 'anthropic'
+    ? process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_CLAUDE_MODEL
+    : process.env.OPENAI_MODEL?.trim() || DEFAULT_MODEL
 }
 
 export function aiConfigured() {
-  return !!process.env.OPENAI_API_KEY?.trim()
+  return provider() !== null
+}
+
+/** Nome da variável de chave em uso (para o painel admin). */
+export function aiKeyName() {
+  return provider() === 'openai' ? 'OPENAI_API_KEY' : 'ANTHROPIC_API_KEY'
 }
 
 export const SYSTEM_PROMPT = `Você é o analista estatístico do GreenGoal, um site brasileiro de informação sobre futebol para maiores de 18 anos.
@@ -58,16 +79,73 @@ FORMATO
 
 PROIBIDO: prometer lucro, ganho, acerto ou resultado; usar "garantido", "certeza", "aposta certa", "sem risco", "100%". Probabilidade alta não é certeza. Apostas envolvem risco.`
 
-export async function generateAiAnalysis(facts: Facts, support: SectionSupport): Promise<{ analysis: AiAnalysis; model: string; usage: unknown }> {
-  const key = process.env.OPENAI_API_KEY?.trim()
-  if (!key) throw new Error('OPENAI_API_KEY não configurada nos segredos do servidor.')
-  const model = aiModel()
-
-  const user = JSON.stringify({
+function userMessage(facts: Facts, support: SectionSupport) {
+  return JSON.stringify({
     instrucao: 'Analise a partida abaixo seguindo rigorosamente as regras. Responda apenas com o JSON do esquema.',
     suporte_por_secao: support,
     dados: facts,
   })
+}
+
+function parseAnalysis(content: string | null | undefined): AiAnalysis {
+  if (!content) throw new Error('Resposta vazia da IA.')
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    throw new Error('A IA retornou JSON inválido.')
+  }
+  if (!isAiAnalysis(parsed)) throw new Error('A resposta da IA não segue o formato esperado.')
+  return parsed
+}
+
+// Modelos com fallback no servidor quando a IA recusa um pedido.
+const SERVER_FALLBACK = /^claude-(opus-5|fable-5|sonnet-5-5)/
+
+async function generateWithClaude(facts: Facts, support: SectionSupport) {
+  const model = aiModel()
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY!.trim(),
+    // ANTHROPIC_BASE_URL só para testes locais (servidor simulado).
+    baseURL: process.env.ANTHROPIC_BASE_URL?.trim() || undefined,
+    timeout: 120_000,
+    maxRetries: 2,
+  })
+  const fallback = SERVER_FALLBACK.test(model)
+  try {
+    const response = await client.beta.messages.create({
+      model,
+      max_tokens: 16000,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: userMessage(facts, support) }],
+      output_config: { effort: 'medium', format: { type: 'json_schema', schema: toAnthropicSchema(AI_RESPONSE_SCHEMA) } },
+      ...(fallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
+    })
+    if (response.stop_reason === 'refusal') throw new Error('A IA recusou gerar a análise.')
+    if (response.stop_reason === 'max_tokens') throw new Error('Resposta da IA truncada (limite de tokens).')
+    const text = response.content
+      .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('')
+    return { analysis: parseAnalysis(text), model: response.model, usage: response.usage }
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) throw new Error('ANTHROPIC_API_KEY inválida.')
+    if (e instanceof Anthropic.PermissionDeniedError) throw new Error('A chave do Claude não tem permissão para este modelo.')
+    if (e instanceof Anthropic.RateLimitError) throw new Error('Limite de uso da API do Claude atingido. Tente mais tarde.')
+    if (e instanceof Anthropic.BadRequestError) throw new Error(`Claude recusou o pedido: ${e.message}`)
+    if (e instanceof Anthropic.APIError) throw new Error(`Claude respondeu ${e.status ?? 'erro'}: ${e.message}`)
+    throw e
+  }
+}
+
+export async function generateAiAnalysis(facts: Facts, support: SectionSupport): Promise<{ analysis: AiAnalysis; model: string; usage: unknown }> {
+  const p = provider()
+  if (!p) throw new Error('Nenhuma chave de IA configurada (ANTHROPIC_API_KEY ou OPENAI_API_KEY).')
+  if (p === 'anthropic') return generateWithClaude(facts, support)
+
+  const key = process.env.OPENAI_API_KEY!.trim()
+  const model = aiModel()
+  const user = userMessage(facts, support)
 
   const base = process.env.OPENAI_BASE_URL?.trim() || 'https://api.openai.com/v1'
   const res = await fetch(`${base}/chat/completions`, {
@@ -107,15 +185,5 @@ export async function generateAiAnalysis(facts: Facts, support: SectionSupport):
   const choice = body.choices?.[0]
   if (choice?.message?.refusal) throw new Error('A IA recusou gerar a análise.')
   if (choice?.finish_reason === 'length') throw new Error('Resposta da IA truncada (limite de tokens).')
-  const content = choice?.message?.content
-  if (!content) throw new Error('Resposta vazia da IA.')
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(content)
-  } catch {
-    throw new Error('A IA retornou JSON inválido.')
-  }
-  if (!isAiAnalysis(parsed)) throw new Error('A resposta da IA não segue o formato esperado.')
-  return { analysis: parsed, model, usage: body.usage }
+  return { analysis: parseAnalysis(choice?.message?.content), model, usage: body.usage }
 }

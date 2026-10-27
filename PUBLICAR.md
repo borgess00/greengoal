@@ -42,12 +42,13 @@ Você precisa de duas coisas: um **banco Supabase** (ou o Lovable Cloud, que é 
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave service_role (**secreta**) |
 | `API_FOOTBALL_KEY` | sua chave da API-Football (**secreta**) |
-| `OPENAI_API_KEY` | sua chave da OpenAI (**secreta**) |
+| `ANTHROPIC_API_KEY` | sua chave do Claude (**secreta**) — ou `OPENAI_API_KEY` para usar a OpenAI |
+| `ANTHROPIC_MODEL` | opcional: `claude-opus-5-5` (padrão), `claude-sonnet-5-5` ou `claude-haiku-5-5` |
 
    As variáveis `VITE_` entram no build: depois de mudá-las, faça um novo deploy.
 4. Aponte seu domínio para o serviço (Settings › Custom Domains).
 
-> Não cadastre `API_FOOTBALL_BASE_URL` nem `OPENAI_BASE_URL` em produção — servem só para os testes locais.
+> Não cadastre `API_FOOTBALL_BASE_URL`, `OPENAI_BASE_URL` nem `ANTHROPIC_BASE_URL` em produção — servem só para os testes locais.
 
 ## 3. Primeiro acesso
 

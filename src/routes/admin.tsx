@@ -234,7 +234,7 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
                 {limitReached && <p className="text-sm font-semibold text-red-600">Limite atingido. Novas gerações bloqueadas até amanhã.</p>}
                 <div className="space-y-1 pt-1 text-xs">
                   <ConfigLine ok={data.config.football} label="API_FOOTBALL_KEY" />
-                  <ConfigLine ok={data.config.ai} label={`OPENAI_API_KEY (${data.config.model})`} />
+                  <ConfigLine ok={data.config.ai} label={`${data.config.aiKey} (${data.config.model})`} />
                   {data.apiRemaining != null && <p className="text-muted-foreground">API-Football: {data.apiRemaining} requisições restantes hoje (última leitura).</p>}
                 </div>
               </>

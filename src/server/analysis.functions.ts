@@ -67,7 +67,7 @@ export const generateAnalysis = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data, context }): Promise<GenerateResult> => {
     if (!footballConfigured()) return { ok: false, error: 'API_FOOTBALL_KEY não configurada nos segredos do servidor.' }
-    if (!aiConfigured()) return { ok: false, error: 'OPENAI_API_KEY não configurada nos segredos do servidor.' }
+    if (!aiConfigured()) return { ok: false, error: 'Chave de IA não configurada nos segredos do servidor (ANTHROPIC_API_KEY).' }
     const db = supabaseAdmin()
     const userId = context.user.id
 
