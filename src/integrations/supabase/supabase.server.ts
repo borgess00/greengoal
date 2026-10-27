@@ -1,6 +1,7 @@
 // Clientes Supabase exclusivos do servidor. A chave service_role nunca
 // chega ao navegador (arquivo *.server.ts é bloqueado no bundle do cliente).
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { normalizeSupabaseUrl } from './url'
 
 function env(name: string): string | undefined {
   const v = process.env[name]
@@ -8,7 +9,7 @@ function env(name: string): string | undefined {
 }
 
 export function supabaseUrl() {
-  const url = env('SUPABASE_URL') ?? env('VITE_SUPABASE_URL')
+  const url = normalizeSupabaseUrl(env('SUPABASE_URL') ?? env('VITE_SUPABASE_URL'))
   if (!url) throw new Error('SUPABASE_URL não configurada no servidor.')
   return url
 }

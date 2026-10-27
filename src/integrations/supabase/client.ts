@@ -1,9 +1,10 @@
 // Cliente Supabase do navegador (Lovable Cloud). Usa apenas a chave
 // pública; o acesso real é decidido pelo RLS do banco.
 import { createClient } from '@supabase/supabase-js'
+import { normalizeSupabaseUrl } from './url'
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined
+const url = normalizeSupabaseUrl(import.meta.env.VITE_SUPABASE_URL as string | undefined)
+const key = ((import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY) as string | undefined)?.trim()
 
 export const supabaseConfigured = !!(url && key)
 
