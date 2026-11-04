@@ -43,6 +43,7 @@ export const Route = createFileRoute('/termos')({
           <p>É proibido copiar, revender ou redistribuir o conteúdo em massa, tentar burlar controles de acesso, automatizar coletas ou usar o serviço para fins ilícitos.</p>
           <h2>7. Limitação de responsabilidade</h2>
           <p>Na extensão permitida pela lei, o GreenGoal não se responsabiliza por perdas decorrentes do uso das informações, de indisponibilidades ou de erros nos dados de terceiros.</p>
+          <p>Links para sites de parceiros (como a VT Dados) levam a serviços de terceiros, com termos e responsabilidades próprios. Só acesse se tiver 18 anos ou mais.</p>
           <h2>8. Alterações</h2>
           <p>Estes termos podem ser atualizados. Mudanças relevantes serão comunicadas no site.</p>
           <h2>9. Contato</h2>

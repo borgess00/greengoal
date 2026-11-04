@@ -1,11 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { Mail, MessageCircle } from 'lucide-react'
 import { Logo } from './logo'
+import { PartnerBanner } from './partner-banner'
 import { SITE } from '@/lib/site'
 
 export function Footer() {
   return (
     <footer className="mt-20 bg-brand-dark text-emerald-50">
+      <PartnerBanner />
       <div className="container-page grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-4">
           <Logo light />

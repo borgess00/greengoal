@@ -10,6 +10,14 @@ export const SITE = {
   developer: 'PredyX IAs',
   /** Servidor de suporte no Discord. */
   supportDiscord: 'https://discord.gg/gczEPrJVC4',
+  /** Divulgação de site parceiro. Sem `url`, o anúncio não aparece. */
+  partner: {
+    name: 'VT Dados',
+    title: 'Você gosta de Bac Bo?',
+    text: 'Conheça a VT Dados.',
+    cta: 'Conhecer a VT Dados',
+    url: '',
+  },
   social: [] as ReadonlyArray<{ name: string; href: string }>,
   helpLines: [
     { name: 'CVV — Centro de Valorização da Vida', detail: 'Ligue 188 (24h, gratuito)', href: 'https://cvv.org.br' },
