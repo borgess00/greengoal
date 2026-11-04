@@ -16,7 +16,7 @@ export const SITE = {
     title: 'Você gosta de Bac Bo?',
     text: 'Conheça a VT Dados.',
     cta: 'Conhecer a VT Dados',
-    url: '',
+    url: 'https://vtdados.netlify.app/',
   },
   social: [] as ReadonlyArray<{ name: string; href: string }>,
   helpLines: [
