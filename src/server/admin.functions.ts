@@ -139,7 +139,7 @@ export const verifyLeaguesFn = createServerFn({ method: 'POST' })
 // Configurações de coleta
 // ---------------------------------------------------------------------
 
-const SETTINGS_KEYS = ['collect_last_matches', 'collect_match_stats', 'collect_player_pages', 'auto_enabled', 'auto_max_analyses', 'auto_max_stats'] as const
+const SETTINGS_KEYS = ['collect_last_matches', 'collect_match_stats', 'collect_player_pages', 'auto_enabled', 'auto_max_analyses', 'auto_max_stats', 'auto_max_results'] as const
 
 export const getSettings = createServerFn({ method: 'GET' })
   .middleware([requireAdmin])
@@ -159,6 +159,7 @@ export const updateSettings = createServerFn({ method: 'POST' })
         auto_enabled: z.boolean().optional(),
         auto_max_analyses: z.number().int().min(0).max(50).optional(),
         auto_max_stats: z.number().int().min(0).max(100).optional(),
+        auto_max_results: z.number().int().min(0).max(100).optional(),
       })
       .parse(d),
   )

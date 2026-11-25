@@ -16,13 +16,19 @@ import { getMatchStats } from '@/server/stats.functions'
 import { FormBadges } from './form-badges'
 import { ChartLegend, GroupedBars, type BarSeries } from './grouped-bars'
 import { MarketAngleCard } from './market-angles'
+import { addToSlip, canBet } from '@/components/slips/market-picker'
+import type { SlipMarketCode } from '@/lib/slips'
 import { RadarChart } from './radar-chart'
 import { StatCompare, StatTile } from './stat-compare'
 
 const HOME = 'var(--series-home)'
 const AWAY = 'var(--series-away)'
 
-type Fixture = Pick<FixtureRow, 'id' | 'league_name' | 'home_team_name' | 'home_team_logo' | 'away_team_name' | 'away_team_logo'>
+type Fixture = Pick<FixtureRow, 'id' | 'league_name' | 'kickoff_at' | 'status_short' | 'home_team_name' | 'home_team_logo' | 'away_team_name' | 'away_team_logo'>
+
+// Mercados por ângulo que também existem no bilhete (conferíveis pelo placar).
+const TO_SLIP: Record<string, SlipMarketCode> = { over15: 'mais_1_5', over25: 'mais_2_5', under35: 'menos_3_5', btts: 'ambos_sim' }
+const slipCode = (key: string) => TO_SLIP[key.split('-').slice(1).join('-')]
 
 /** Seção "Estatísticas" da página da partida: carrega, trata acesso e estados. */
 export function MatchStatsSection({ fixture, authReady, userKey, redirect }: { fixture: Fixture; authReady: boolean; userKey: string; redirect: string }) {
@@ -101,9 +107,9 @@ function LockedStats({ fixture, form, needsLogin, redirect }: { fixture: Fixture
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-white/40 via-white/85 to-white p-6">
+        <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-card/40 via-card/85 to-card p-6">
           <div className="max-w-sm text-center">
-            <div className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-brand-dark text-white shadow-lift">
+            <div className="mx-auto mb-3 grid size-12 place-items-center rounded-full bg-brand-deep text-white shadow-lift">
               <Lock className="size-5" />
             </div>
             <h3 className="font-display text-lg font-bold text-brand-dark">Estatísticas completas para assinantes</h3>
@@ -166,6 +172,7 @@ const stat = (k: keyof GameStats) => (r: GameRow) => r.stats?.[k] ?? null
 
 export function MatchStatsPanel({ fixture, home, away, h2hHome, h2hAway }: { fixture: Fixture; home: GameRow[]; away: GameRow[]; h2hHome: GameRow[]; h2hAway: GameRow[] }) {
   const [tab, setTab] = React.useState('resumo')
+  const addFor = useAddFor(fixture)
   const markets = React.useMemo(
     () =>
       rankMarkets([
@@ -203,7 +210,7 @@ export function MatchStatsPanel({ fixture, home, away, h2hHome, h2hAway }: { fix
               onClick={() => setN(o)}
               className={cn(
                 'rounded-full px-4 py-1.5 text-sm font-semibold transition',
-                n === o ? 'bg-white text-brand-dark shadow-sm' : 'text-muted-foreground hover:text-brand-dark',
+                n === o ? 'bg-card text-brand-dark shadow-sm' : 'text-muted-foreground hover:text-brand-dark',
               )}
             >
               {o > 10 ? `Todos (${o})` : `Últimos ${o}`}
@@ -251,7 +258,7 @@ export function MatchStatsPanel({ fixture, home, away, h2hHome, h2hAway }: { fix
             <Panel title="Mercados mais consistentes" subtitle="Em quantos jogos cada mercado aconteceu, olhando cada time por vários ângulos. Frequência histórica, não é previsão.">
               <div className="grid gap-3 md:grid-cols-2">
                 {markets.slice(0, 2).map((m) => (
-                  <MarketAngleCard key={m.key} m={m} logo={<TeamCrest name={m.team} logo={m.side === 'home' ? fixture.home_team_logo : fixture.away_team_logo} size={30} />} />
+                  <MarketAngleCard key={m.key} m={m} onAdd={addFor(m.key)} logo={<TeamCrest name={m.team} logo={m.side === 'home' ? fixture.home_team_logo : fixture.away_team_logo} size={30} />} />
                 ))}
               </div>
               <Button variant="outline" size="sm" className="mt-4" onClick={() => setTab('mercados')}>
@@ -271,7 +278,7 @@ export function MatchStatsPanel({ fixture, home, away, h2hHome, h2hAway }: { fix
                 ]}
               />
             </Panel>
-            <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-secondary to-white p-5 shadow-soft">
+            <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-secondary to-card p-5 shadow-soft">
               <h3 className="mb-3 flex items-center gap-2 font-display text-lg font-bold text-brand-dark">
                 <Lightbulb className="size-5 text-primary" /> Leitura da partida
               </h3>
@@ -360,8 +367,17 @@ export function MatchStatsPanel({ fixture, home, away, h2hHome, h2hAway }: { fix
   )
 }
 
+function useAddFor(fixture: Fixture) {
+  const bettable = canBet(fixture)
+  return (key: string) => {
+    const code = slipCode(key)
+    return bettable && code ? () => addToSlip(fixture, code, null) : undefined
+  }
+}
+
 function MarketsTab({ markets, fixture }: { markets: ReturnType<typeof rankMarkets>; fixture: Fixture }) {
   const [side, setSide] = React.useState<'all' | 'home' | 'away'>('all')
+  const addFor = useAddFor(fixture)
   const [limit, setLimit] = React.useState(8)
   const list = markets.filter((m) => side === 'all' || m.side === side)
   const chips = [
@@ -392,7 +408,7 @@ function MarketsTab({ markets, fixture }: { markets: ReturnType<typeof rankMarke
       {list.length ? (
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {list.slice(0, limit).map((m) => (
-            <MarketAngleCard key={m.key} m={m} logo={<TeamCrest name={m.team} logo={m.side === 'home' ? fixture.home_team_logo : fixture.away_team_logo} size={30} />} />
+            <MarketAngleCard key={m.key} m={m} onAdd={addFor(m.key)} logo={<TeamCrest name={m.team} logo={m.side === 'home' ? fixture.home_team_logo : fixture.away_team_logo} size={30} />} />
           ))}
         </div>
       ) : (

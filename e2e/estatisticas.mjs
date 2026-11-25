@@ -166,8 +166,8 @@ await step('Celular: barra inferior aparece e navega; no computador fica escondi
   const nav = page.getByRole('navigation', { name: 'Navegação rápida' })
   await nav.waitFor()
   await page.screenshot({ path: `${SHOTS}/stats-celular.png`, fullPage: false })
-  await nav.getByRole('link', { name: 'Favoritos' }).click()
-  await page.waitForURL(/\/favoritos/)
+  await nav.getByRole('link', { name: 'Meus bilhetes' }).click()
+  await page.waitForURL(/\/meus-bilhetes/)
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'rolagem horizontal no celular')
   const desk = await newPage()
   await desk.goto(`${BASE}/`)
@@ -178,10 +178,12 @@ await step('Celular: barra inferior aparece e navega; no computador fica escondi
 })
 
 await step('Automação sem chave da IA coleta estatísticas e grava a forma', async () => {
-  // Garante uma partida sem dados (o teste pode rodar mais de uma vez).
-  const target = missing ?? fixtures[fixtures.length - 1]
-  if (!missing) await admin.from('fixture_data').delete().eq('fixture_id', target.id)
-  const missingFx = target
+  // Garante uma partida de hoje, por jogar, sem dados (o teste pode rodar mais de uma vez).
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date())
+  // No mock, o jogo de id terminado em 2 começa às 22:30 UTC (o mais tarde do dia).
+  const { data: cand } = await admin.from('fixtures').select('id').eq('grade_date', today).neq('status_short', 'FT')
+  const missingFx = cand.find((f) => f.id % 10 === 2) ?? cand[0]
+  await admin.from('fixture_data').delete().eq('fixture_id', missingFx.id)
   const env = { ...process.env, ANTHROPIC_API_KEY: '', OPENAI_API_KEY: '' }
   const out = execFileSync('npx', ['tsx', 'scripts/automacao.ts'], { env, encoding: 'utf8' })
   assert.match(out, /Estatísticas coletadas: [1-9]/, out)

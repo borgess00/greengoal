@@ -19,7 +19,7 @@ export const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'O que são os bilhetes prontos?',
-    a: 'Todos os dias, depois que as análises ficam prontas, a IA monta bilhetes separados por nível de risco (baixo, médio e médio-alto) usando apenas os mercados com mais sustentação nos dados. Quando a fonte informa, cada seleção traz a odd e o bilhete mostra a odd total. A odd muda até o início do jogo e nenhum bilhete tem garantia de resultado.',
+    a: 'Todos os dias, depois que as análises ficam prontas, a IA monta bilhetes em quatro faixas de odd total — baixa (até 2,00), média (até 5,00), alta (até 15,00) e altíssima (acima disso) — usando apenas os mercados com mais sustentação nos dados. Quando todas as seleções têm odd da fonte, o site recalcula a odd total e coloca o bilhete na faixa certa. Quanto maior a odd, menor a chance. Você pode salvar um bilhete pronto em “Meus bilhetes” para acompanhar. A odd muda até o início do jogo e nenhum bilhete tem garantia de resultado.',
   },
   {
     q: 'As análises são atualizadas automaticamente?',
@@ -47,7 +47,7 @@ export const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'Quais planos existem e qual a diferença?',
-    a: 'Semanal (R$ 10,90), mensal (R$ 41,90) e anual (R$ 399,90, equivalente a R$ 33,33/mês). Todos liberam os mesmos recursos.',
+    a: 'Semanal (R$ 7,90), mensal (R$ 16,90) e anual (R$ 99,90, equivalente a R$ 8,33/mês). Todos liberam os mesmos recursos.',
   },
   {
     q: 'Como funciona o pagamento?',

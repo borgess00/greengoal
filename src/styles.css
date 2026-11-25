@@ -31,6 +31,8 @@
   --brand: #16a34a;
   --brand-dark: #064e3b;
   --brand-light: #4ade80;
+  /* Verde profundo fixo (fundos), igual nos dois temas. */
+  --brand-deep: #064e3b;
   --warning: #b45309;
 
   /* Superfícies escuras (entrada do site, cabeçalho, rodapé). */
@@ -44,6 +46,34 @@
   --result-win: #15803d;
   --result-draw: #66756d;
   --result-loss: #dc2626;
+}
+
+/* Tema escuro (opcional): ativado pela classe .dark no <html>. */
+.dark {
+  color-scheme: dark;
+  --background: #07110d;
+  --foreground: #e6f2eb;
+  --card: #0d1a14;
+  --card-foreground: #e6f2eb;
+  --popover: #10201a;
+  --popover-foreground: #e6f2eb;
+  --primary: #4ade80;
+  --primary-foreground: #052e16;
+  --secondary: #11261c;
+  --secondary-foreground: #c7f9d9;
+  --muted: #11211a;
+  --muted-foreground: #93a99c;
+  --accent: #15301f;
+  --accent-foreground: #d1fae5;
+  --destructive: #ef4444;
+  --border: #1d3429;
+  --input: #27443a;
+  --ring: #4ade80;
+  /* Títulos: o verde-escuro do tema claro vira verde-menta claro. */
+  --brand-dark: #d1fae5;
+  --warning: #fbbf24;
+  --series-home: #047857;
+  --series-away: #65a30d;
 }
 
 @theme inline {
@@ -72,6 +102,7 @@
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-brand-light: var(--brand-light);
+  --color-brand-deep: var(--brand-deep);
   --color-warning: var(--warning);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);

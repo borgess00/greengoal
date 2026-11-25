@@ -52,7 +52,7 @@ export function PricingPlans({
               onClick={() => setPeriod(p.id)}
               className={cn(
                 'relative rounded-full px-5 py-2 text-sm font-semibold transition sm:px-7',
-                on ? (dark ? 'bg-white/15 text-white' : 'bg-brand-dark text-white') : dark ? 'text-white/60 hover:text-white' : 'text-muted-foreground hover:text-brand-dark',
+                on ? (dark ? 'bg-white/15 text-white' : 'bg-brand-deep text-white') : dark ? 'text-white/60 hover:text-white' : 'text-muted-foreground hover:text-brand-dark',
               )}
             >
               {p.name}
@@ -88,7 +88,7 @@ export function PricingPlans({
         <div
           className={cn(
             'relative flex flex-col overflow-hidden rounded-2xl border-2 p-6 sm:p-7',
-            dark ? 'border-brand-light/70 bg-gradient-to-br from-ink-3 via-ink-2 to-[#16361f] text-white' : 'border-primary bg-gradient-to-br from-white via-white to-secondary shadow-lift',
+            dark ? 'border-brand-light/70 bg-gradient-to-br from-ink-3 via-ink-2 to-[#16361f] text-white' : 'border-primary bg-gradient-to-br from-card via-card to-secondary shadow-lift',
           )}
         >
           <div className="flex items-start justify-between gap-3">

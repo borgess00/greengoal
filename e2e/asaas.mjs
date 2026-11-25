@@ -66,7 +66,7 @@ await step('Contratação: CPF, Pix e redirecionamento para a fatura do Asaas', 
   assert.equal(s.provider, 'asaas')
   assert.ok(s.provider_ref?.startsWith('sub_'))
   const { data: pays } = await admin.from('payments').select('status, invoice_url, amount_cents, method').eq('subscription_id', s.id)
-  assert.deepEqual(pays.map((p) => [p.status, p.amount_cents, p.method]), [['pending', 4190, 'pix']])
+  assert.deepEqual(pays.map((p) => [p.status, p.amount_cents, p.method]), [['pending', 1690, 'pix']])
   const state = await (await fetch(`${MOCK}/__asaas`)).json()
   payment = state.last
   assert.equal(state.subs[s.provider_ref].cycle, 'MONTHLY')

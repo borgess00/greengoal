@@ -22,3 +22,7 @@ teto diário de IA no lote, radar de escanteios e layout no celular.
 `e2e/estatisticas.mjs` (rodar depois do `run.mjs`) cobre: painel de estatísticas (bloqueio para visitante, recorte 5/10,
 abas, tooltip, radar, leitura), forma nos cartões, destaque do início, busca, favoritos, barra inferior no celular e
 automação coletando estatísticas sem a chave da IA.
+
+`e2e/painel-bilhetes.mjs` (rodar depois dos dois anteriores) cobre: Painel com mercado oculto para visitante e revelado para
+assinante, tema claro/escuro salvo, partidas encerradas (filtro, gols e estatísticas finais), montar/salvar bilhete e
+conferência automática quando o jogo acaba, bloqueio de inserção direta e barra inferior no celular.

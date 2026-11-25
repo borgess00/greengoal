@@ -158,7 +158,7 @@ function EscanteiosPage() {
                         <td className="px-4 py-3 text-right tabular">{r.venueSample ? `${formatNumber(r.venueForAvg, 1)} (${r.venueSample})` : '—'}</td>
                         <td className="px-4 py-3 text-right tabular">{r.opponentSample ? formatNumber(r.opponentConcededAvg, 1) : '—'}</td>
                         <td className="px-4 py-3 text-right">
-                          <span className="rounded-md bg-brand-dark px-2 py-1 font-display font-bold text-white tabular">{formatNumber(r.combinedAvg, 1)}</span>
+                          <span className="rounded-md bg-brand-deep px-2 py-1 font-display font-bold text-white tabular">{formatNumber(r.combinedAvg, 1)}</span>
                         </td>
                         <td className="px-4 py-3 text-right tabular">
                           {r.atLeast5}/{r.sample}

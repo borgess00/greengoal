@@ -16,9 +16,9 @@ insert into public.daily_tickets (grade_date, status, content) values ('2026-10-
 insert into public.fixture_data (fixture_id, payload) values (1001, '{"raw":true}');
 
 do $$ begin
-  assert (select price_cents from public.plans where id = 'weekly') = 1090, 'semanal deveria custar R$ 10,90';
-  assert (select price_cents from public.plans where id = 'monthly') = 4190, 'mensal deveria custar R$ 41,90';
-  assert (select price_cents from public.plans where id = 'annual') = 39990, 'anual deveria continuar R$ 399,90';
+  assert (select price_cents from public.plans where id = 'weekly') = 790, 'semanal deveria custar R$ 7,90';
+  assert (select price_cents from public.plans where id = 'monthly') = 1690, 'mensal deveria custar R$ 16,90';
+  assert (select price_cents from public.plans where id = 'annual') = 9990, 'anual deveria custar R$ 99,90';
   assert not exists (select 1 from information_schema.columns where table_name = 'fixtures' and column_name = 'period'), 'coluna period deveria ter saído';
   assert (select has_analysis from public.fixtures where id = 1001), 'has_analysis deveria ser true';
   assert public.has_role('00000000-0000-0000-0000-00000000000a', 'admin'), 'admin não recebeu papel';
@@ -68,6 +68,23 @@ do $$ begin
 exception when insufficient_privilege then null; end $$;
 reset role;
 
+insert into public.user_slips (user_id, selections) values
+  ('00000000-0000-0000-0000-00000000000c', '[{"fixture_id":1001,"market":"casa"}]'),
+  ('00000000-0000-0000-0000-00000000000b', '[{"fixture_id":1001,"market":"fora"}]');
+insert into public.fixture_results (fixture_id, stats) values (1001, '[]');
+do $$ begin
+  insert into public.user_slips (user_id, selections) values ('00000000-0000-0000-0000-00000000000b', '[]');
+  raise exception 'bilhete vazio deveria ser recusado';
+exception when check_violation then null; end $$;
+set local role anon;
+do $$ begin
+  assert (select count(*) from public.fixture_results) = 1, 'visitante lê resultados';
+end $$;
+do $$ begin
+  perform count(*) from public.user_slips;
+  raise exception 'anon não deveria ler bilhetes';
+exception when insufficient_privilege then null; end $$;
+reset role;
 do $$ begin
   update public.fixtures set form_home = 'VVEDX' where id = 1001;
   raise exception 'forma inválida deveria ser recusada';
@@ -90,6 +107,19 @@ do $$ begin
   assert (select count(*) from public.profiles) = 1, 'deve ver só o próprio perfil';
   assert (select count(*) from public.ai_usage) = 0, 'não admin não vê uso de IA';
 end $$;
+-- meus bilhetes: vê só os próprios; criar/alterar só pelo servidor
+do $$ begin
+  assert (select count(*) from public.user_slips) = 1, 'deve ver só os próprios bilhetes';
+  assert (select count(*) from public.fixture_results) = 1, 'resultados de partidas são públicos';
+end $$;
+do $$ begin
+  insert into public.user_slips (user_id, selections) values ('00000000-0000-0000-0000-00000000000c', '[{"fixture_id":1001,"market":"casa"}]');
+  raise exception 'usuário não deveria inserir bilhete direto';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  update public.user_slips set status = 'won';
+  raise exception 'usuário não deveria liquidar bilhete';
+exception when insufficient_privilege then null; end $$;
 -- favoritos: insere e lê só os próprios; não grava em nome de outra pessoa
 insert into public.favorite_teams (user_id, team_id, team_name) values ('00000000-0000-0000-0000-00000000000c', 121, 'Palmeiras');
 do $$ begin

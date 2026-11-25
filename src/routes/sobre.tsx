@@ -34,7 +34,7 @@ function SobrePage() {
         </div>
 
         <div className="mt-8 flex flex-col gap-4 rounded-2xl border border-primary/20 bg-secondary/60 p-6 sm:flex-row sm:items-center">
-          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-dark text-white">
+          <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-deep text-white">
             <Cpu className="size-6" />
           </span>
           <div>

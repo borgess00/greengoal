@@ -97,7 +97,18 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 - **Favoritos** (`/favoritos`): estrela ao lado do escudo na página da partida; tabela `favorite_teams` com RLS (cada pessoa só vê e altera os seus).
 - **Barra inferior** no celular (Início, Jogos, Favoritos, Bilhetes, Conta).
 - **Automação**: coleta as estatísticas de até `auto_max_stats` partidas por execução (sem IA; funciona mesmo sem a chave do Claude). Para “últimos 10” ter finalizações/escanteios em todos os jogos, suba “Jogos com estatística detalhada” para 10 em Admin › Coleta (mais consultas à API-Football).
-- Banco: rode `supabase/atualizacao-estatisticas.sql` (quem já instalou). Sem ela o site continua funcionando, mas sem forma nos cartões e sem favoritos.
+- Banco: incluído em `supabase/atualizacao-novidades.sql`. Sem ela o site continua funcionando, mas sem forma nos cartões, favoritos e Meus bilhetes.
+
+## App estilo ScoutPicks: Painel, Partidas, Meus bilhetes e tema
+
+- **Layout de app**: barra lateral no computador (`src/components/layout/sidebar.tsx`) + barra superior com busca, “Obter Pro”, tema e conta; no celular, cabeçalho + barra inferior. A página inicial continua sendo a vitrine.
+- **Tema claro/escuro** (`src/lib/theme.ts`): escuro por padrão, botão sol/lua para trocar; a escolha fica salva no navegador e um script no `<head>` aplica o tema antes da primeira pintura. Tokens em `.dark` (`src/styles.css`); títulos usam `text-brand-dark` (vira verde-menta no escuro) e fundos fixos usam `bg-brand-deep`.
+- **Painel** (`/painel`, `getDashboard`): destaques do dia (mercados por ângulo de várias partidas), grandes jogos de hoje com odds 1X2 quando houver, resumo de Meus bilhetes, desempenho e resultados de ontem/hoje. **Para quem não assina, o servidor remove o nome do mercado** e mostra só as linhas que se cumpriram (até 3 ângulos).
+- **Partidas** (`/jogos`): lista compacta por país/competição com forma em tracinhos e placar, filtros Todas / Ao vivo / Próximas / Encerradas e, no computador, painel lateral da partida (gols, estatísticas finais, montar bilhete).
+- **Partidas encerradas**: tabela `fixture_results` (leitura pública) com estatísticas finais e eventos (gols, cartões), coletados pela automação (`collectFixtureResult`, 2 consultas por jogo, cache permanente) ou pelo botão do admin.
+- **Meus bilhetes** (`/meus-bilhetes`, grátis com login): “+ Bilhete” nos mercados da partida e nos cartões de mercados por ângulo, montador flutuante (`src/components/slips/slip-dock.tsx`, rascunho no navegador), salvar com nome, unidades e odds; abas Abertos/Ganhos/Perdidos/Anulados, “Sua rodada” e desempenho (acerto, unidades, ROI). Liquidação pelo placar do tempo regulamentar (`src/lib/slips.ts`); jogo adiado/cancelado anula a seleção. Tabela `user_slips`: cada pessoa lê/apaga só os seus; criação e liquidação só pelo servidor. Bilhetes prontos podem ser salvos em Meus bilhetes.
+- A antiga “Conferir bilhete” (`/bilhete`) redireciona para Meus bilhetes.
+- Banco: quem já instalou roda `supabase/atualizacao-novidades.sql` (estatísticas, favoritos, preços novos, resultados e Meus bilhetes).
 
 ## Visual e mercados por ângulo (inspirado em apps esportivos premium)
 
@@ -115,8 +126,8 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 
 ## Automação e bilhetes prontos
 
-- **Bilhetes prontos** (`/bilhetes-prontos`, assinantes): a IA monta bilhetes do dia por nível de risco (baixo, médio, médio-alto) a partir das análises concluídas, com odd por seleção (quando a fonte informa), odd total e chance combinada estimada. Tabela `daily_tickets` com RLS igual à das análises. Cada geração consome 1 chamada do teto diário de IA.
-- **Automação diária**: `.github/workflows/automacao.yml` roda `scripts/automacao.ts` no GitHub Actions às 08h05 e 14h05 (Brasília) e sob demanda (Run workflow). Busca os jogos, gera até `auto_max_analyses` análises das partidas que ainda não começaram (prioridade por campeonato e horário) e depois os bilhetes. Liga/desliga e limite no painel Admin › Coleta. Segredos do repositório: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_FOOTBALL_KEY`, `ANTHROPIC_API_KEY` (opcional: variável `ANTHROPIC_MODEL`).
+- **Bilhetes prontos** (`/bilhetes-prontos`, assinantes): a IA monta bilhetes do dia em quatro faixas de odd total (baixa ≤ 2,00 · média ≤ 5,00 · alta ≤ 15,00 · altíssima > 15,00; o site reclassifica pela odd real quando todas as seleções têm odd) a partir das análises concluídas, com odd por seleção (quando a fonte informa), odd total e chance combinada estimada. Tabela `daily_tickets` com RLS igual à das análises. Cada geração consome 1 chamada do teto diário de IA.
+- **Automação diária**: `.github/workflows/automacao.yml` roda `scripts/automacao.ts` no GitHub Actions às 08h05, 14h05 e 23h40 (Brasília) e sob demanda (Run workflow). Também atualiza os jogos de ontem, coleta os resultados das partidas encerradas (`auto_max_results`) e confere os bilhetes dos usuários. Busca os jogos, gera até `auto_max_analyses` análises das partidas que ainda não começaram (prioridade por campeonato e horário) e depois os bilhetes. Liga/desliga e limite no painel Admin › Coleta. Segredos do repositório: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_FOOTBALL_KEY`, `ANTHROPIC_API_KEY` (opcional: variável `ANTHROPIC_MODEL`).
 - Roda fora do Netlify porque as funções de lá têm limite de 30 s, e uma análise pode passar disso.
 
 ## Pendências (não declarar como prontas)

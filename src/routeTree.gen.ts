@@ -19,6 +19,8 @@ import { Route as EscanteiosRouteImport } from './routes/escanteios'
 import { Route as FavoritosRouteImport } from './routes/favoritos'
 import { Route as JogoResponsavelRouteImport } from './routes/jogo-responsavel'
 import { Route as JogosRouteImport } from './routes/jogos'
+import { Route as MeusBilhetesRouteImport } from './routes/meus-bilhetes'
+import { Route as PainelRouteImport } from './routes/painel'
 import { Route as PerfilRouteImport } from './routes/perfil'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -79,6 +81,16 @@ const JogosRoute = JogosRouteImport.update({
   path: '/jogos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeusBilhetesRoute = MeusBilhetesRouteImport.update({
+  id: '/meus-bilhetes',
+  path: '/meus-bilhetes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRoute = PainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PerfilRoute = PerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -136,6 +148,8 @@ export interface FileRoutesByFullPath {
   '/favoritos': typeof FavoritosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
+  '/meus-bilhetes': typeof MeusBilhetesRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/planos': typeof PlanosRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -157,6 +171,8 @@ export interface FileRoutesByTo {
   '/favoritos': typeof FavoritosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
+  '/meus-bilhetes': typeof MeusBilhetesRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/planos': typeof PlanosRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -179,6 +195,8 @@ export interface FileRoutesById {
   '/favoritos': typeof FavoritosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
+  '/meus-bilhetes': typeof MeusBilhetesRoute
+  '/painel': typeof PainelRoute
   '/perfil': typeof PerfilRoute
   '/planos': typeof PlanosRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -202,6 +220,8 @@ export interface FileRouteTypes {
     | '/favoritos'
     | '/jogo-responsavel'
     | '/jogos'
+    | '/meus-bilhetes'
+    | '/painel'
     | '/perfil'
     | '/planos'
     | '/privacidade'
@@ -223,6 +243,8 @@ export interface FileRouteTypes {
     | '/favoritos'
     | '/jogo-responsavel'
     | '/jogos'
+    | '/meus-bilhetes'
+    | '/painel'
     | '/perfil'
     | '/planos'
     | '/privacidade'
@@ -244,6 +266,8 @@ export interface FileRouteTypes {
     | '/favoritos'
     | '/jogo-responsavel'
     | '/jogos'
+    | '/meus-bilhetes'
+    | '/painel'
     | '/perfil'
     | '/planos'
     | '/privacidade'
@@ -266,6 +290,8 @@ export interface RootRouteChildren {
   FavoritosRoute: typeof FavoritosRoute
   JogoResponsavelRoute: typeof JogoResponsavelRoute
   JogosRoute: typeof JogosRoute
+  MeusBilhetesRoute: typeof MeusBilhetesRoute
+  PainelRoute: typeof PainelRoute
   PerfilRoute: typeof PerfilRoute
   PlanosRoute: typeof PlanosRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -349,6 +375,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JogosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/meus-bilhetes': {
+      id: '/meus-bilhetes'
+      path: '/meus-bilhetes'
+      fullPath: '/meus-bilhetes'
+      preLoaderRoute: typeof MeusBilhetesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel': {
+      id: '/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof PainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/perfil': {
       id: '/perfil'
       path: '/perfil'
@@ -426,6 +466,8 @@ const rootRouteChildren: RootRouteChildren = {
   FavoritosRoute: FavoritosRoute,
   JogoResponsavelRoute: JogoResponsavelRoute,
   JogosRoute: JogosRoute,
+  MeusBilhetesRoute: MeusBilhetesRoute,
+  PainelRoute: PainelRoute,
   PerfilRoute: PerfilRoute,
   PlanosRoute: PlanosRoute,
   PrivacidadeRoute: PrivacidadeRoute,

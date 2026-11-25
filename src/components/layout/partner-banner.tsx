@@ -23,7 +23,7 @@ export function PartnerBanner() {
           href={p.url}
           target="_blank"
           rel="sponsored noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-dark transition hover:bg-emerald-50"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-deep transition hover:bg-emerald-50"
         >
           {p.cta} <ExternalLink className="size-4" />
         </a>

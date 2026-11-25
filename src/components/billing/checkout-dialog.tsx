@@ -80,7 +80,7 @@ export function CheckoutDialog({ plan, open, onOpenChange, replacing }: { plan: 
             </div>
           </div>
         ) : (
-          <div className="flex gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
+          <div className="flex gap-3 rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="alert">
             <FlaskConical className="mt-0.5 size-5 shrink-0" />
             <div>
               <p className="font-bold">Modo demonstração — nenhuma cobrança será feita.</p>

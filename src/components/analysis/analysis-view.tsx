@@ -32,7 +32,7 @@ export function AnalysisView({ content, home, away }: { content: AnalysisContent
   return (
     <div className="space-y-6">
       {content.resumo && (
-        <Card className="border-primary/30 bg-gradient-to-br from-white to-secondary/60">
+        <Card className="border-primary/30 bg-gradient-to-br from-card to-secondary/60">
           <CardHeader className="pb-3">
             <div className="flex flex-wrap items-center gap-2">
               <CardTitle className="flex items-center gap-2 text-brand-dark">
@@ -106,7 +106,7 @@ export function AnalysisView({ content, home, away }: { content: AnalysisContent
                   <li key={i} className="grid grid-cols-[auto_1fr_auto_1fr] items-center gap-2 py-2.5">
                     <span className="w-12 text-xs text-muted-foreground tabular">{formatShortDate(m.date)}</span>
                     <span className="truncate text-right font-medium">{m.home}</span>
-                    <span className="rounded-md bg-brand-dark px-2 py-0.5 font-display text-xs font-bold text-white tabular">{m.score}</span>
+                    <span className="rounded-md bg-brand-deep px-2 py-0.5 font-display text-xs font-bold text-white tabular">{m.score}</span>
                     <span className="truncate font-medium">{m.away}</span>
                   </li>
                 ))}
@@ -197,11 +197,11 @@ export function AnalysisView({ content, home, away }: { content: AnalysisContent
       )}
 
       {content.alertas.length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <p className="mb-2 flex items-center gap-2 font-semibold text-amber-900">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <p className="mb-2 flex items-center gap-2 font-semibold text-amber-900 dark:text-amber-200">
             <ShieldAlert className="size-4" /> Alertas e limitações
           </p>
-          <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900">
+          <ul className="list-disc space-y-1 pl-5 text-sm text-amber-900 dark:text-amber-200">
             {content.alertas.map((a, i) => (
               <li key={i}>{a}</li>
             ))}
@@ -243,7 +243,7 @@ function Probabilities({ content, home, away }: { content: AnalysisContent; home
               {[
                 { label: home, value: p.casa, dot: 'bg-primary' },
                 { label: 'Empate', value: p.empate, dot: 'bg-slate-400' },
-                { label: away, value: p.fora, dot: 'bg-brand-dark' },
+                { label: away, value: p.fora, dot: 'bg-brand-deep' },
               ].map((o) => (
                 <div key={o.label} className="min-w-0">
                   <p className="flex items-center justify-center gap-1.5 truncate text-xs font-semibold text-muted-foreground">
@@ -257,7 +257,7 @@ function Probabilities({ content, home, away }: { content: AnalysisContent; home
             <div className="flex h-3 overflow-hidden rounded-full bg-muted" aria-hidden>
               <div className="bg-primary" style={{ width: `${p.casa}%` }} />
               <div className="bg-slate-400" style={{ width: `${p.empate}%` }} />
-              <div className="bg-brand-dark" style={{ width: `${p.fora}%` }} />
+              <div className="bg-brand-deep" style={{ width: `${p.fora}%` }} />
             </div>
             <p className="mt-2 text-xs text-muted-foreground">Percentuais do modelo estatístico da API-Football para esta partida.</p>
           </div>
@@ -300,9 +300,9 @@ function Probabilities({ content, home, away }: { content: AnalysisContent; home
 }
 
 const RISK_STYLE: Record<Highlight['risco'], string> = {
-  baixo: 'bg-green-100 text-green-800',
-  medio: 'bg-amber-100 text-amber-800',
-  'medio-alto': 'bg-orange-100 text-orange-800',
+  baixo: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300',
+  medio: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+  'medio-alto': 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300',
 }
 
 function HighlightCard({ h }: { h: Highlight }) {
@@ -321,11 +321,11 @@ function HighlightCard({ h }: { h: Highlight }) {
       </div>
       <div className="mt-3 grid gap-2 border-t pt-3 text-xs">
         <p>
-          <span className="font-semibold text-green-700">A favor: </span>
+          <span className="font-semibold text-green-700 dark:text-green-300">A favor: </span>
           {h.a_favor}
         </p>
         <p>
-          <span className="font-semibold text-red-700">Contra: </span>
+          <span className="font-semibold text-red-700 dark:text-red-300">Contra: </span>
           {h.contra}
         </p>
       </div>

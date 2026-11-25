@@ -63,7 +63,7 @@ function BuscaPage() {
             placeholder="Ex.: Flamengo, Premier League…"
             aria-label="Time ou campeonato"
             maxLength={60}
-            className="h-12 rounded-full bg-white pl-12 text-base text-foreground"
+            className="h-12 rounded-full bg-card pl-12 text-base text-foreground"
           />
         </form>
       </PageHeader>

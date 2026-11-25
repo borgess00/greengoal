@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { BarChart3, ChevronDown, ChevronUp } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import type { MarketAngles } from '@/lib/match-stats'
 import { cn } from '@/lib/utils'
 
@@ -13,7 +13,20 @@ function rateClass(p: number, dark: boolean) {
 }
 
 /** Cartão de um mercado testado por vários ângulos (estilo "7/10 nos últimos 10 jogos"). */
-export function MarketAngleCard({ m, tone = 'light', logo, defaultOpen = true }: { m: MarketAngles; tone?: 'light' | 'dark'; logo?: React.ReactNode; defaultOpen?: boolean }) {
+export function MarketAngleCard({
+  m,
+  tone = 'light',
+  logo,
+  defaultOpen = true,
+  onAdd,
+}: {
+  m: MarketAngles
+  tone?: 'light' | 'dark'
+  logo?: React.ReactNode
+  defaultOpen?: boolean
+  /** Quando o mercado pode ir para o bilhete (jogo ainda não começou). */
+  onAdd?: () => void
+}) {
   const dark = tone === 'dark'
   const [open, setOpen] = React.useState(defaultOpen)
   const main = m.angles[0]
@@ -62,11 +75,12 @@ export function MarketAngleCard({ m, tone = 'light', logo, defaultOpen = true }:
           ))}
         </ul>
       )}
-      {m.angles.length > 1 && (
+      <div className="mt-2 flex items-center justify-between gap-2">
+      {m.angles.length > 1 ? (
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className={cn('mt-2 flex items-center gap-1 text-xs font-semibold', dark ? 'text-brand-light' : 'text-primary')}
+          className={cn('flex items-center gap-1 text-xs font-semibold', dark ? 'text-brand-light' : 'text-primary')}
           aria-expanded={open}
         >
           {open ? (
@@ -79,7 +93,20 @@ export function MarketAngleCard({ m, tone = 'light', logo, defaultOpen = true }:
             </>
           )}
         </button>
+      ) : (
+        <span />
       )}
+      {onAdd && (
+        <button
+          type="button"
+          onClick={onAdd}
+          className={cn('flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition', dark ? 'border-white/20 text-white hover:bg-white/10' : 'hover:border-primary hover:bg-secondary')}
+          aria-label={`Adicionar ${m.market} ao bilhete`}
+        >
+          <Plus className="size-3.5" /> Bilhete
+        </button>
+      )}
+      </div>
     </div>
   )
 }

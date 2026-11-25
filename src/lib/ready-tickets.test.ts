@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildReadyTickets, oddsByCode, type TicketFixtureInfo } from './ready-tickets'
+import { buildReadyTickets, oddsByCode, ticketTier, tierForOdd, type TicketFixtureInfo } from './ready-tickets'
 
 const fixtures: TicketFixtureInfo[] = [
   {
@@ -25,7 +25,7 @@ describe('bilhetes prontos', () => {
         bilhetes: [
           {
             titulo: 'Médio',
-            risco: 'medio',
+            faixa: 'alta',
             resumo: 'r',
             selecoes: [
               { fixture_id: 1, mercado: 'Lazio vence', codigo: 'fora', probabilidade_estimada: 48, justificativa: 'j' },
@@ -36,7 +36,7 @@ describe('bilhetes prontos', () => {
           },
           {
             titulo: 'Baixo',
-            risco: 'baixo',
+            faixa: 'media',
             resumo: 'r',
             selecoes: [{ fixture_id: 1, mercado: 'Mais de 2.5', codigo: 'mais_2_5', probabilidade_estimada: 55, justificativa: 'j' }],
           },
@@ -44,12 +44,20 @@ describe('bilhetes prontos', () => {
       },
       fixtures,
     )
-    expect(bilhetes.map((b) => b.risco)).toEqual(['baixo', 'medio'])
+    // Com odd real a faixa vem da odd total (1,80 = baixa), mesmo a IA dizendo "media";
+    // sem todas as odds, vale o rótulo da IA.
+    expect(bilhetes.map((b) => b.faixa)).toEqual(['baixa', 'alta'])
     expect(bilhetes[0].odd_total).toBe(1.8) // odd encontrada pelo rótulo antigo
     const medio = bilhetes[1]
     expect(medio.selecoes.map((s) => s.fixture_id)).toEqual([2, 1]) // ordenado por horário, sem repetidos/inválidos
     expect(medio.selecoes[1].odd).toBe(2.05)
     expect(medio.odd_total).toBeNull() // Arsenal x Chelsea sem odd informada
     expect(medio.probabilidade_combinada).toBe(28.8)
+  })
+
+  it('faixas de odd e compatibilidade com bilhetes antigos', () => {
+    expect([1.5, 2, 2.01, 5, 5.5, 15, 15.01, 40].map(tierForOdd)).toEqual(['baixa', 'baixa', 'media', 'media', 'alta', 'alta', 'altissima', 'altissima'])
+    expect(ticketTier({ risco: 'medio-alto' })).toBe('alta')
+    expect(ticketTier({ faixa: 'altissima' })).toBe('altissima')
   })
 })

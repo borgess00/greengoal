@@ -240,7 +240,7 @@ function AssinaturaTab() {
     onError: (e) => toast.error(errorMessage(e)),
   })
   const pendingCard = pending.data ? (
-    <Card className="mb-6 border-amber-300 bg-amber-50/60">
+    <Card className="mb-6 border-amber-300 bg-amber-50/60 dark:border-amber-500/30 dark:bg-amber-500/10">
       <CardHeader>
         <CardTitle className="text-lg">Pedido aguardando pagamento — plano {pending.data.plans?.name}</CardTitle>
         <CardDescription>O acesso é liberado automaticamente assim que o Asaas confirmar o pagamento. No Pix, costuma levar poucos segundos.</CardDescription>
@@ -287,7 +287,7 @@ function AssinaturaTab() {
       <EmptyState
         icon={ShieldCheck}
         title={sub ? 'Sua assinatura não está ativa' : 'Você ainda não tem assinatura'}
-        description={sub ? `O plano ${sub.plan_name ?? ''} venceu em ${formatDate(sub.current_period_end)}.` : 'Assine para liberar análises completas, conferência de bilhete e radar de escanteios.'}
+        description={sub ? `O plano ${sub.plan_name ?? ''} venceu em ${formatDate(sub.current_period_end)}.` : 'Assine para liberar análises completas, estatísticas, bilhetes prontos e radar de escanteios.'}
         action={
           <Button asChild>
             <Link to="/planos">Ver planos</Link>
@@ -336,7 +336,7 @@ function AssinaturaTab() {
           ) : (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800">
+                <Button variant="outline" className="border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-500/40 dark:text-red-300 dark:hover:bg-red-500/10">
                   Cancelar assinatura
                 </Button>
               </AlertDialogTrigger>
@@ -344,7 +344,7 @@ function AssinaturaTab() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Cancelar a assinatura?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Você mantém o acesso até {formatDate(sub.current_period_end)}. Depois disso, as análises completas e a conferência de bilhete ficam bloqueadas.
+                    Você mantém o acesso até {formatDate(sub.current_period_end)}. Depois disso, as análises, as estatísticas completas e os bilhetes prontos ficam bloqueados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

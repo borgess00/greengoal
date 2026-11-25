@@ -51,7 +51,7 @@ function AuthPage() {
             <h1 className="mt-2 font-display text-2xl font-bold text-brand-dark">Sua conta GreenGoal</h1>
           </div>
           {!supabaseConfigured && (
-            <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Autenticação indisponível: o Lovable Cloud ainda não está conectado a este ambiente.</p>
+            <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">Autenticação indisponível: o Lovable Cloud ainda não está conectado a este ambiente.</p>
           )}
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full">

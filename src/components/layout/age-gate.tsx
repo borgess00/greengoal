@@ -45,7 +45,7 @@ export function AgeGate() {
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-[#03261c]/85 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="age-title">
-      <div className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-lift">
+      <div className="w-full max-w-md rounded-2xl bg-card p-7 text-center shadow-lift">
         <img src="/logo-sm.png" alt="" width={104} height={80} className="mx-auto mb-3 h-16 w-auto" />
         {answer === null ? (
           <>
@@ -70,7 +70,7 @@ export function AgeGate() {
           </>
         ) : (
           <>
-            <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-red-50 text-red-600">
+            <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300">
               <Ban className="size-7" />
             </div>
             <h2 id="age-title" className="font-display text-2xl font-bold text-brand-dark">

@@ -5,7 +5,7 @@
 import { pruneSections, sanitizeAi, scrubPromises, type AnalysisContent } from '@/lib/analysis'
 import { buildFacts } from '@/lib/facts'
 import { isFinished, isLive } from '@/lib/fixture-status'
-import { currentGradeDate } from '@/lib/grade'
+import { addDays, currentGradeDate } from '@/lib/grade'
 import {
   AI_TICKETS_SCHEMA,
   buildReadyTickets,
@@ -17,7 +17,8 @@ import {
 } from '@/lib/ready-tickets'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 import { aiConfigured, generateAiAnalysis, structuredCall } from './ai.server'
-import { collectCornerData, collectFixtureBundle, footballConfigured, readCollectOptions, syncGrade } from './football.server'
+import { collectCornerData, collectFixtureBundle, collectFixtureResult, footballConfigured, readCollectOptions, syncGrade } from './football.server'
+import { settleAllOpenSlips } from './slips.server'
 
 const STALE_GENERATING_MS = 10 * 60_000
 
@@ -125,19 +126,21 @@ DADOS
 - "fixture_id" deve ser exatamente o id de uma partida recebida.
 
 COMO MONTAR
-- Organize em três níveis de risco, nesta ordem: "baixo", "medio" e "medio-alto". Pode haver mais de um bilhete por nível quando os dados sustentarem; não há limite fixo de jogos, mas só entre o que tiver base real.
-  - baixo: seleções de maior probabilidade estimada, dados consistentes, poucas condições. Ainda podem perder.
-  - medio: fundamento estatístico razoável, mais variabilidade.
-  - medio-alto: potencial interessante, mas dependente de contexto ou de eventos menos frequentes.
-- O risco reflete probabilidade, variabilidade e qualidade dos dados — nunca só a linha ou a odd. Bilhetes com muitas seleções têm risco maior: a chance combinada cai a cada jogo.
+- Organize em QUATRO faixas de odd total, nesta ordem: "baixa", "media", "alta" e "altissima". Monte pelo menos um bilhete de cada faixa quando os dados sustentarem; pode haver mais de um por faixa. Não há limite fixo de jogos, mas só entre o que tiver base real.
+  - baixa (odd total até 2,00): poucas seleções de maior probabilidade estimada e dados consistentes. Ainda podem perder.
+  - media (odd total de 2,01 a 5,00): fundamento estatístico razoável, combinação de 2 a 4 seleções.
+  - alta (odd total de 5,01 a 15,00): mais seleções ou mercados menos prováveis, cada um com sustentação nos dados.
+  - altissima (odd total acima de 15,00): bilhete longo ou de resultados menos prováveis; deixe claro no resumo que a chance combinada é baixa.
+- A odd total é o produto das odds das seleções. Use as odds reais recebidas para mirar a faixa; o site recalcula a odd total e reclassifica a faixa quando todas as seleções têm odd.
+- Odd maior significa chance menor: a cada seleção a chance combinada cai. Nunca apresente odd alta como oportunidade garantida.
 - Uma seleção por partida em cada bilhete. Evite seleções correlacionadas no mesmo bilhete e não repita a mesma conclusão em mercados diferentes.
 - Prefira mercados com odd real disponível e use o "codigo" correspondente. Mercados sem odd na lista (ex.: escanteios totais, finalizações) usam codigo "outro" e entram só com sustentação clara.
 - Dê preferência a seleções que a análise já destacou. Partidas com confiança de dados baixa entram com cautela, se entrarem.
 - "probabilidade_estimada": inteiro conservador de 1 a 99 (a da análise, quando houver) ou null. Não confunda frequência histórica com probabilidade.
 - Considere valor: compare a probabilidade estimada com a implícita da odd; não trate favorito como sinônimo de boa aposta.
-- Não force bilhetes: se não houver base para um nível, não monte bilhete daquele nível. Lista vazia é aceitável.
+- Não force bilhetes: se não houver base para uma faixa, não monte bilhete daquela faixa. Lista vazia é aceitável.
 - Escanteios: a fonte só traz totais por partida; nunca monte seleções de escanteios em intervalos de tempo (ex.: 10 primeiros minutos).
-- "titulo": curto (ex.: "Bilhete conservador"). "resumo": 1 a 2 frases sobre a lógica do bilhete e o principal risco. "justificativa" de cada seleção: 1 a 2 frases com os números que a sustentam.
+- "titulo": curto e sem citar a faixa (ex.: "Favoritos em casa"); o site mostra a faixa pela odd total real. "resumo": 1 a 2 frases sobre a lógica do bilhete e o principal risco. "justificativa" de cada seleção: 1 a 2 frases com os números que a sustentam.
 - "observacoes": alertas gerais (escalações não confirmadas, amostras pequenas, mercados evitados e por quê).
 
 PROIBIDO: prometer lucro, ganho ou acerto; usar "garantido", "certeza", "aposta certa", "sem risco", "100%". Apostas envolvem risco.`
@@ -253,6 +256,8 @@ export interface AutomationReport {
   limitReached: boolean
   tickets?: string
   stats?: number
+  results?: number
+  settled?: number
   log: string[]
 }
 
@@ -293,6 +298,15 @@ export async function runAutomation(opts: { date?: string; log?: (msg: string) =
     await logRun('sync', 'error', { message, auto: true }, null, undefined, date)
   }
 
+  // 1b) Ontem: atualiza placares e status das partidas que terminaram depois da última execução.
+  const yesterday = addDays(date, -1)
+  try {
+    const r = await syncGrade(yesterday)
+    say(`Jogos de ontem (${yesterday}) atualizados: ${r.saved}`)
+  } catch (e) {
+    say(`Falha ao atualizar os jogos de ontem: ${e instanceof Error ? e.message : String(e)}`)
+  }
+
   const [{ data: fixtures }, { data: leagues }, { data: analyses }] = await Promise.all([
     db.from('fixtures').select('id, league_id, kickoff_at, status_short, home_team_name, away_team_name').eq('grade_date', date),
     db.from('leagues').select('id, priority'),
@@ -327,6 +341,40 @@ export async function runAutomation(opts: { date?: string; log?: (msg: string) =
     }
     say(`Estatísticas coletadas: ${out.stats}`)
     await logRun('collect', 'ok', { stats: out.stats, auto: true }, null, undefined, date)
+  }
+
+  // 2b) Partidas encerradas (ontem e hoje): estatísticas finais e gols.
+  const maxResults = Math.max(0, await readNumberSetting('auto_max_results', 8))
+  if (maxResults > 0) {
+    const { data: finished } = await db
+      .from('fixtures')
+      .select('id, league_id, kickoff_at, home_team_name, away_team_name')
+      .in('grade_date', [yesterday, date])
+      .in('status_short', ['FT', 'AET', 'PEN'])
+    const ids = (finished ?? []).map((f) => f.id as number)
+    const { data: done } = ids.length ? await db.from('fixture_results').select('fixture_id').in('fixture_id', ids) : { data: [] }
+    const have = new Set((done ?? []).map((r) => r.fixture_id as number))
+    const queue = (finished ?? []).filter((f) => !have.has(f.id as number)).sort(byPriority).slice(0, maxResults)
+    out.results = 0
+    for (const f of queue) {
+      try {
+        await collectFixtureResult(f.id as number)
+        out.results++
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        say(`✗ resultado de ${f.home_team_name} x ${f.away_team_name}: ${message}`)
+        if (/request limit|requests? (per day|limit)|reached the limit/i.test(message)) break
+      }
+    }
+    say(`Resultados de partidas encerradas coletados: ${out.results} (limite configurado: ${maxResults})`)
+  }
+
+  // 2c) Confere os bilhetes salvos pelos usuários ("Meus bilhetes").
+  try {
+    out.settled = await settleAllOpenSlips()
+    say(`Bilhetes de usuários conferidos agora: ${out.settled}`)
+  } catch (e) {
+    say(`Falha ao conferir bilhetes de usuários: ${e instanceof Error ? e.message : String(e)}`)
   }
 
   if (!aiConfigured()) {

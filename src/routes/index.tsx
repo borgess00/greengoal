@@ -86,7 +86,7 @@ function HomePage() {
                 </Button>
               )}
             </div>
-            <p className="mt-5 text-sm text-white/55">Comece grátis. Plano completo a partir de R$ 10,90 por semana.</p>
+            <p className="mt-5 text-sm text-white/55">Comece grátis. Plano completo a partir de R$ 7,90 por semana.</p>
           </div>
           <figure className="relative mx-auto w-full max-w-[540px]">
             <div className="absolute inset-[12%] rounded-full bg-brand-light/30 blur-3xl" aria-hidden />
@@ -163,8 +163,8 @@ function HomePage() {
             {[
               { icon: BarChart3, title: 'Estatísticas que fazem a diferença', text: 'Últimos 5 e 10 jogos de cada time: gols, finalizações, escanteios, cartões e posse, com gráficos, radar comparativo e leitura da partida.' },
               { icon: Layers, title: 'Mercados por ângulo', text: 'Mais de 1,5 gols, ambos marcam, escanteios, cartões… cada mercado com a frequência geral, em casa ou fora, na competição e no confronto direto.' },
-              { icon: Sparkles, title: 'Análises e bilhetes prontos', text: 'Análises escritas a partir dos dados reais da partida e bilhetes do dia separados por nível de risco, com odds quando a fonte informa.' },
-              { icon: Star, title: 'Seus times e sua busca', text: 'Siga seus times favoritos, encontre qualquer jogo pela busca e confira seus bilhetes — no celular ou no computador.' },
+              { icon: Sparkles, title: 'Análises e bilhetes prontos', text: 'Análises escritas a partir dos dados reais da partida e bilhetes do dia em quatro faixas: odd baixa, média, alta e altíssima, com odds quando a fonte informa.' },
+              { icon: Star, title: 'Meus bilhetes e favoritos', text: 'Monte seus bilhetes no site e acompanhe sozinho se bateram, com taxa de acerto e resultado em unidades. Siga seus times e busque qualquer jogo.' },
             ].map((f) => (
               <li key={f.title} className="flex gap-4">
                 <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-brand-light/30 bg-brand-light/10 text-brand-light">

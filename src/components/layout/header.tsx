@@ -1,24 +1,24 @@
 import * as React from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Crown, Layers, LogOut, Menu, Search, Settings, Shield, Star, Ticket, UserRound, Info } from 'lucide-react'
+import { LogOut, Menu, Search, Settings, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Logo } from './logo'
+import { APP_NAV, SITE_NAV } from './nav-items'
+import { ThemeToggle } from './theme-toggle'
 import { signOut, useMe } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
-const NAV = [
-  { to: '/jogos', label: 'Jogos do dia', icon: CalendarDays },
-  { to: '/bilhetes-prontos', label: 'Bilhetes prontos', icon: Layers },
-  { to: '/bilhete', label: 'Conferir bilhete', icon: Ticket },
-  { to: '/favoritos', label: 'Favoritos', icon: Star },
-  { to: '/planos', label: 'Planos', icon: Crown },
-  { to: '/sobre', label: 'Sobre', icon: Info },
-] as const
+/** Links do topo na página inicial (no app, a barra lateral faz esse papel). */
+const TOP_NAV = [APP_NAV[0], APP_NAV[1], APP_NAV[2], APP_NAV[3], SITE_NAV[0]] as const
 
-export function Header() {
+/**
+ * Cabeçalho: completo na página inicial; dentro do app aparece só no celular
+ * (no computador o app usa a barra lateral + barra superior).
+ */
+export function Header({ app = false }: { app?: boolean }) {
   const { user, me, loading } = useMe()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -34,49 +34,42 @@ export function Header() {
     navigate({ to: '/' })
   }
 
+  const ghost = 'text-white hover:bg-white/10 hover:text-white'
+
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-ink text-white">
+    <header className={cn('sticky top-0 z-40 border-b border-white/10 bg-ink text-white', app && 'lg:hidden')}>
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Logo light />
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
-          {NAV.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="rounded-full px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
-              activeProps={{ className: 'bg-white/10 !text-white' }}
-            >
-              {item.label}
-            </Link>
-          ))}
-          {isAdmin && (
-            <Link to="/admin" className="rounded-full px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white" activeProps={{ className: 'bg-white/10 !text-white' }}>
-              Admin
-            </Link>
-          )}
-        </nav>
+        {!app && (
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
+            {TOP_NAV.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="rounded-full px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+                activeProps={{ className: 'bg-white/10 !text-white' }}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
 
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" aria-label="Buscar jogos" title="Buscar jogos">
+        <div className="flex items-center gap-1.5">
+          <Button asChild variant="ghost" size="icon" className={ghost} aria-label="Buscar jogos" title="Buscar jogos">
             <Link to="/busca">
               <Search className="size-5" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" className="hidden text-white hover:bg-white/10 hover:text-white lg:inline-flex" aria-label="Favoritos" title="Favoritos">
-            <Link to="/favoritos">
-              <Star className="size-5" />
-            </Link>
-          </Button>
+          <ThemeToggle className={cn(ghost, 'hidden sm:inline-flex')} />
           <div className="hidden items-center gap-2 sm:flex">
             {user ? (
-              <Button asChild variant="ghost" size="sm" className="h-9 text-white hover:bg-white/10 hover:text-white">
-                <Link to="/perfil">
-                  <UserRound /> Minha conta
-                </Link>
+              <Button asChild variant="ghost" size="sm" className={cn('h-9', ghost)}>
+                <Link to="/perfil">Minha conta</Link>
               </Button>
             ) : (
-              <Button asChild variant="ghost" size="sm" className="h-9 text-white hover:bg-white/10 hover:text-white" disabled={loading}>
+              <Button asChild variant="ghost" size="sm" className={cn('h-9', ghost)} disabled={loading}>
                 <Link to="/auth">Entrar</Link>
               </Button>
             )}
@@ -99,8 +92,8 @@ export function Header() {
               <div className="pt-1 pb-2">
                 <Logo />
               </div>
-              <nav className="flex flex-col gap-1" aria-label="Menu móvel">
-                {NAV.map((item) => (
+              <nav className="flex flex-col gap-1 overflow-y-auto" aria-label="Menu móvel">
+                {[...APP_NAV, ...SITE_NAV].map((item) => (
                   <SheetClose asChild key={item.to}>
                     <Link
                       to={item.to}
@@ -121,6 +114,7 @@ export function Header() {
                 )}
               </nav>
               <div className="mt-auto flex flex-col gap-2 border-t pt-4">
+                <ThemeToggle withLabel className="border border-border text-foreground hover:bg-secondary" />
                 {user ? (
                   <>
                     <SheetClose asChild>
@@ -148,7 +142,7 @@ export function Header() {
                     </Button>
                   </SheetClose>
                 )}
-                <p className={cn('pt-2 text-center text-xs text-muted-foreground')}>18+ · Apostas envolvem risco.</p>
+                <p className="pt-2 text-center text-xs text-muted-foreground">18+ · Apostas envolvem risco.</p>
               </div>
             </SheetContent>
           </Sheet>

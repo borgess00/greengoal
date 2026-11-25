@@ -1,15 +1,15 @@
 import { Link } from '@tanstack/react-router'
-import { CalendarDays, House, Layers, Star, UserRound } from 'lucide-react'
+import { CalendarDays, Layers, LayoutDashboard, TicketCheck, UserRound } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
 /** Barra de navegação inferior no celular (estilo aplicativo). */
 export function BottomNav() {
   const { user } = useAuth()
   const items = [
-    { to: '/', label: 'Início', icon: House, exact: true },
-    { to: '/jogos', label: 'Jogos', icon: CalendarDays },
-    { to: '/favoritos', label: 'Favoritos', icon: Star },
-    { to: '/bilhetes-prontos', label: 'Bilhetes', icon: Layers },
+    { to: '/painel', label: 'Painel', icon: LayoutDashboard },
+    { to: '/jogos', label: 'Partidas', icon: CalendarDays },
+    { to: '/bilhetes-prontos', label: 'Prontos', icon: Layers },
+    { to: '/meus-bilhetes', label: 'Meus bilhetes', icon: TicketCheck },
     { to: user ? '/perfil' : '/auth', label: user ? 'Conta' : 'Entrar', icon: UserRound },
   ] as const
   return (
@@ -24,8 +24,7 @@ export function BottomNav() {
             <li key={it.label}>
               <Link
                 to={it.to}
-                activeOptions={{ exact: 'exact' in it && it.exact }}
-                className="group flex h-full flex-col items-center justify-center gap-1 text-[11px] font-semibold text-white/60"
+                                className="group flex h-full flex-col items-center justify-center gap-1 text-center text-[10.5px] leading-tight font-semibold text-white/60"
                 activeProps={{ className: 'text-white', 'aria-current': 'page' }}
               >
                 {({ isActive }: { isActive: boolean }) => (

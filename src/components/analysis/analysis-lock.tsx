@@ -12,15 +12,15 @@ export function AnalysisLock({ needsLogin, redirect }: { needsLogin: boolean; re
       <div className="pointer-events-none space-y-4 p-6 blur-[6px] select-none" aria-hidden>
         {[90, 75, 82, 60, 88, 70].map((w, i) => (
           <div key={i} className="space-y-2">
-            <div className="h-4 rounded bg-brand-dark/15" style={{ width: `${w / 3}%` }} />
+            <div className="h-4 rounded bg-brand-deep/15" style={{ width: `${w / 3}%` }} />
             <div className="h-3 rounded bg-muted" style={{ width: `${w}%` }} />
             <div className="h-3 rounded bg-muted" style={{ width: `${w - 12}%` }} />
           </div>
         ))}
       </div>
-      <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-white/40 via-white/85 to-white p-6">
+      <div className="absolute inset-0 grid place-items-center bg-gradient-to-b from-card/40 via-card/85 to-card p-6">
         <div className="max-w-sm text-center">
-          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-brand-dark text-white shadow-lift">
+          <div className="mx-auto mb-4 grid size-14 place-items-center rounded-full bg-brand-deep text-white shadow-lift">
             <Lock className="size-6" />
           </div>
           <h3 className="font-display text-xl font-bold text-brand-dark">Análise exclusiva para assinantes</h3>

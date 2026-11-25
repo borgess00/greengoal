@@ -1,6 +1,8 @@
-# Automação diária do GreenGoal: busca os jogos do dia, gera as análises e
-# os bilhetes prontos. Roda no GitHub (sem custo de créditos do Netlify).
-# Horários em UTC: 11:05 UTC = 08:05 em Brasília; 17:05 UTC = 14:05.
+# Automação diária do GreenGoal: busca os jogos do dia, coleta estatísticas e
+# resultados, confere os bilhetes dos usuários, gera as análises e os bilhetes
+# prontos. Roda no GitHub (sem custo de créditos do Netlify).
+# Horários em UTC: 11:05 UTC = 08:05 em Brasília; 17:05 UTC = 14:05;
+# 02:40 UTC = 23:40 (resultados da noite e conferência dos bilhetes).
 # Também pode ser executada manualmente em Actions > Automação diária > Run workflow.
 name: Automação diária
 
@@ -8,6 +10,7 @@ on:
   schedule:
     - cron: '5 11 * * *'
     - cron: '5 17 * * *'
+    - cron: '40 2 * * *'
   workflow_dispatch:
     inputs:
       data:

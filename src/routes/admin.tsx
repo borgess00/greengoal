@@ -246,7 +246,7 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
                   <span className="text-lg text-muted-foreground">/{data.usage.limit}</span>
                 </p>
                 <Progress value={usagePct} indicatorClassName={cn(usagePct >= 100 ? 'bg-red-500' : usagePct >= 80 && 'bg-amber-500')} />
-                {limitReached && <p className="text-sm font-semibold text-red-600">Limite atingido. Novas gerações bloqueadas até amanhã.</p>}
+                {limitReached && <p className="text-sm font-semibold text-red-600 dark:text-red-400">Limite atingido. Novas gerações bloqueadas até amanhã.</p>}
                 <div className="space-y-1 pt-1 text-xs">
                   <ConfigLine ok={data.config.football} label="API_FOOTBALL_KEY" />
                   <ConfigLine ok={data.config.ai} label={`${data.config.aiKey} (${data.config.model})`} />
@@ -295,8 +295,8 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
                         {f.league_name} · #{f.id}
                         {f.has_data && ' · dados coletados'}
                       </p>
-                      {st === 'error' && f.analysis?.error && <p className="mt-1 text-xs text-red-600">{f.analysis.error}</p>}
-                      {st === 'error' && !f.analysis?.error && <p className="mt-1 text-xs text-red-600">Geração interrompida (sem resposta há mais de 10 min).</p>}
+                      {st === 'error' && f.analysis?.error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{f.analysis.error}</p>}
+                      {st === 'error' && !f.analysis?.error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">Geração interrompida (sem resposta há mais de 10 min).</p>}
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={STATUS_UI[busy.has(f.id) ? 'generating' : st].variant}>{STATUS_UI[busy.has(f.id) ? 'generating' : st].label}</Badge>
@@ -324,7 +324,7 @@ function GradePanel({ date, setDate }: { date: string; setDate: (d: string) => v
             <ul className="divide-y text-sm">
               {data.runs.map((r) => (
                 <li key={r.id as string} className="flex flex-wrap items-center gap-2 py-2">
-                  {r.status === 'ok' ? <CircleCheck className="size-4 text-green-600" /> : <CircleX className="size-4 text-red-600" />}
+                  {r.status === 'ok' ? <CircleCheck className="size-4 text-green-600 dark:text-green-400" /> : <CircleX className="size-4 text-red-600 dark:text-red-400" />}
                   <span className="font-semibold">{({ sync: 'Sincronização', generate: 'Geração', collect: 'Coleta', leagues: 'Campeonatos', tickets: 'Bilhetes', auto: 'Automação' } as Record<string, string>)[r.kind as string] ?? r.kind}</span>
                   {r.fixture_id ? <span className="text-muted-foreground">#{r.fixture_id as number}</span> : null}
                   <span className="text-xs text-muted-foreground">{formatDateTime(r.created_at as string)}</span>
@@ -351,7 +351,7 @@ function summarizeRun(d: Record<string, unknown>) {
 
 function ConfigLine({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <p className={cn('flex items-center gap-1.5', ok ? 'text-green-700' : 'text-red-600')}>
+    <p className={cn('flex items-center gap-1.5', ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400')}>
       {ok ? <ShieldCheck className="size-3.5" /> : <CircleX className="size-3.5" />} {label} {ok ? 'configurada' : 'ausente'}
     </p>
   )
@@ -461,6 +461,7 @@ function SettingsPanel() {
           auto_enabled: !!form.auto_enabled,
           auto_max_analyses: form.auto_max_analyses,
           auto_max_stats: form.auto_max_stats,
+          auto_max_results: form.auto_max_results,
         },
       }),
     onSuccess: () => {
@@ -480,8 +481,8 @@ function SettingsPanel() {
       <CardHeader>
         <CardTitle className="text-base">Automação diária</CardTitle>
         <CardDescription>
-          Roda sozinha no GitHub Actions às 08h05 e às 14h05 (Brasília): busca os jogos do dia, coleta as estatísticas dos jogos recentes (painel “Estatísticas” das
-          partidas, sem IA), gera as análises das partidas prioritárias que ainda não começaram e monta os bilhetes prontos (estas duas etapas só com a chave da IA). Também pode ser disparada em GitHub › Actions › “Automação diária” › Run workflow.
+          Roda sozinha no GitHub Actions às 08h05, 14h05 e 23h40 (Brasília): busca os jogos do dia e atualiza os de ontem, coleta as estatísticas dos jogos recentes e os resultados das
+          partidas encerradas (sem IA), confere os bilhetes dos usuários, gera as análises das partidas prioritárias que ainda não começaram e monta os bilhetes prontos (estas duas etapas só com a chave da IA). Também pode ser disparada em GitHub › Actions › “Automação diária” › Run workflow.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-5 md:grid-cols-3">
@@ -512,6 +513,18 @@ function SettingsPanel() {
             onChange={(e) => setForm((s) => ({ ...s, auto_max_stats: Math.max(0, Math.min(100, Number(e.target.value))) }))}
           />
           <p className="text-xs text-muted-foreground">Sem IA. Cada partida usa até ~12 consultas (jogos já vistos ficam em cache). No plano gratuito, mantenha entre 4 e 6.</p>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="auto_max_results">Partidas encerradas por execução</Label>
+          <Input
+            id="auto_max_results"
+            type="number"
+            min={0}
+            max={100}
+            value={form.auto_max_results ?? ''}
+            onChange={(e) => setForm((s) => ({ ...s, auto_max_results: Math.max(0, Math.min(100, Number(e.target.value))) }))}
+          />
+          <p className="text-xs text-muted-foreground">Estatísticas finais e gols de partidas de ontem e de hoje (2 consultas cada, guardadas para sempre).</p>
         </div>
       </CardContent>
     </Card>

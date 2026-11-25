@@ -13,5 +13,5 @@ const arg = process.argv[2]
 const date = arg && isValidDate(arg) ? arg : undefined
 
 const report = await runAutomation({ date, log: (m) => console.log(m) })
-console.log(JSON.stringify({ date: report.date, generated: report.generated, failed: report.failed, limitReached: report.limitReached, tickets: report.tickets, stats: report.stats, skipped: report.skipped }))
+console.log(JSON.stringify({ date: report.date, generated: report.generated, failed: report.failed, limitReached: report.limitReached, tickets: report.tickets, stats: report.stats, results: report.results, settled: report.settled, skipped: report.skipped }))
 if (report.skipped && /ausente/.test(report.skipped)) process.exit(1)

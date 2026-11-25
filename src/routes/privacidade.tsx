@@ -22,7 +22,7 @@ export const Route = createFileRoute('/privacidade')({
           <ul>
             <li>Criar e manter sua conta e autenticar o acesso.</li>
             <li>Liberar recursos da assinatura e exibir seu histórico.</li>
-            <li>Conferir bilhetes e guardar o histórico das conferências.</li>
+            <li>Guardar os bilhetes que você monta em “Meus bilhetes” e conferir o resultado deles.</li>
             <li>Segurança, prevenção a fraudes e cumprimento de obrigações legais.</li>
           </ul>
           <h2>Compartilhamento</h2>

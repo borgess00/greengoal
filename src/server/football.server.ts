@@ -328,6 +328,26 @@ async function matchStatistics(fixtureId: number, tracker: CallTracker) {
 }
 
 /**
+ * Estatísticas finais e eventos (gols, cartões) de uma partida encerrada.
+ * Partida encerrada não muda: as duas consultas ficam em cache permanente.
+ */
+export async function collectFixtureResult(fixtureId: number, tracker: CallTracker = newTracker()) {
+  const db = supabaseAdmin()
+  const { data: fx } = await db.from('fixtures').select('id, status_short').eq('id', fixtureId).maybeSingle()
+  if (!fx) throw new Error('Partida não encontrada no banco.')
+  if (!FINISHED.has(fx.status_short as string)) throw new Error('A partida ainda não terminou.')
+  const [stats, events] = await Promise.all([
+    matchStatistics(fixtureId, tracker),
+    cached(`fixture-events:${fixtureId}`, null, tracker, async () => (await request<unknown[]>('/fixtures/events', { fixture: fixtureId }, tracker)).response ?? []),
+  ])
+  const { error } = await db
+    .from('fixture_results')
+    .upsert({ fixture_id: fixtureId, stats: stats as never, events: events as never, collected_at: new Date().toISOString() })
+  if (error) throw new Error(`Falha ao salvar o resultado: ${error.message}`)
+  return { stats: stats.length, events: (events as unknown[]).length, tracker }
+}
+
+/**
  * Grava a forma recente (V/E/D) nas colunas da partida. Ignora falhas: a
  * coluna pode não existir se a atualização do banco ainda não foi aplicada.
  */

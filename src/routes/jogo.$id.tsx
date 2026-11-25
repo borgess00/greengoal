@@ -12,6 +12,9 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FavoriteStar } from '@/components/stats/favorite-star'
 import { MatchStatsSection } from '@/components/stats/match-stats-panel'
+import { FinishedMatchStats, ResultEvents, useMatchResult } from '@/components/results/match-result-view'
+import { MarketPicker, canBet } from '@/components/slips/market-picker'
+import { Trophy, TicketCheck } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { isFinished, isLive, statusLabel } from '@/lib/fixture-status'
 import { errorMessage } from '@/lib/format'
@@ -130,7 +133,20 @@ function JogoPage() {
       </section>
 
       <div className="container-page py-8">
+        {finished && <FinishedSection fixtureId={fixture.id} />}
+
         <MatchStatsSection fixture={fixture} authReady={!authLoading} userKey={user?.id ?? 'anon'} redirect={location.href} />
+
+        {canBet(fixture) && (
+          <section id="montar-bilhete" aria-labelledby="titulo-bilhete" className="mb-10">
+            <h2 id="titulo-bilhete" className="mb-4 flex items-center gap-2 font-display text-2xl font-bold text-brand-dark">
+              <TicketCheck className="size-6 text-primary" /> Montar bilhete
+            </h2>
+            <div className="rounded-xl border bg-card p-5 shadow-soft">
+              <MarketPicker fixture={fixture} />
+            </div>
+          </section>
+        )}
 
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl font-bold text-brand-dark">Análise da partida</h2>
@@ -177,6 +193,24 @@ function JogoPage() {
   )
 }
 
+function FinishedSection({ fixtureId }: { fixtureId: number }) {
+  const r = useMatchResult(fixtureId)
+  const events = r.data?.available ? r.data.events : []
+  return (
+    <section aria-labelledby="titulo-resultado" className="mb-10">
+      <h2 id="titulo-resultado" className="mb-4 flex items-center gap-2 font-display text-2xl font-bold text-brand-dark">
+        <Trophy className="size-6 text-primary" /> Estatísticas da partida
+      </h2>
+      {events.length > 0 && (
+        <div className="mb-4 rounded-xl border bg-card p-4">
+          <ResultEvents events={events} />
+        </div>
+      )}
+      <FinishedMatchStats fixtureId={fixtureId} />
+    </section>
+  )
+}
+
 function TeamBlock({ id, name, logo, label }: { id: number; name: string; logo: string | null; label: string }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
@@ -184,7 +218,7 @@ function TeamBlock({ id, name, logo, label }: { id: number; name: string; logo: 
         <div className="grid size-16 place-items-center rounded-2xl bg-white p-2 shadow-lift sm:size-20">
           <TeamCrest name={name} logo={logo} size={56} />
         </div>
-        <FavoriteStar teamId={id} teamName={name} teamLogo={logo} className="absolute -top-2 -right-3 size-8 bg-brand-dark/70" />
+        <FavoriteStar teamId={id} teamName={name} teamLogo={logo} className="absolute -top-2 -right-3 size-8 bg-brand-deep/70" />
       </div>
       <p className="font-display text-base leading-tight font-bold sm:text-xl">{name}</p>
       <p className="text-[11px] tracking-wider text-emerald-100/70 uppercase">{label}</p>

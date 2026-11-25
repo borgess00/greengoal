@@ -26,9 +26,10 @@ export function Footer() {
         <FooterCol
           title="Produto"
           links={[
-            { to: '/jogos', label: 'Jogos do dia' },
+            { to: '/painel', label: 'Painel' },
+            { to: '/jogos', label: 'Partidas' },
             { to: '/bilhetes-prontos', label: 'Bilhetes prontos' },
-            { to: '/bilhete', label: 'Conferir bilhete' },
+            { to: '/meus-bilhetes', label: 'Meus bilhetes' },
             { to: '/escanteios', label: 'Radar de escanteios' },
             { to: '/planos', label: 'Planos' },
           ]}

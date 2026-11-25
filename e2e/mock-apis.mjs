@@ -99,6 +99,16 @@ function football(path, q) {
     return remember([0, 1, 2, 3, 4, 5].map((i) => fixtureFor(800000 + i, new Date(Date.UTC(2025, 8 - i, 10, 20)).toISOString(), 71, i % 2 ? b : a, i % 2 ? a : b, 'FT', [i % 3, (i + 1) % 2])))
   }
   if (path === '/fixtures/statistics') return matchStats(Number(q.get('fixture')))
+  if (path === '/fixtures/events') {
+    const f = byId.get(Number(q.get('fixture')))
+    if (!f) return []
+    const goals = (team, n, base) => Array.from({ length: n ?? 0 }, (_, i) => ({ time: { elapsed: base + i * 17, extra: null }, team: { id: team.id, name: team.name }, player: { name: `Atacante ${team.name} ${i + 1}` }, assist: { name: i ? null : `Meia ${team.name}` }, type: 'Goal', detail: i === 1 ? 'Penalty' : 'Normal Goal' }))
+    return [
+      ...goals(f.teams.home, f.goals.home, 23),
+      ...goals(f.teams.away, f.goals.away, 48),
+      { time: { elapsed: 55, extra: null }, team: { id: f.teams.away.id }, player: { name: `Volante ${f.teams.away.name}` }, type: 'Card', detail: 'Yellow Card' },
+    ]
+  }
   if (path === '/predictions') return [{ predictions: { percent: { home: '45%', draw: '30%', away: '25%' }, advice: 'Double chance : home or draw' }, comparison: { att: { home: '60%', away: '40%' } } }]
   if (path === '/teams/statistics') {
     return { form: 'WWDLW', fixtures: { played: { home: 8, away: 7, total: 15 }, wins: { home: 5, away: 3, total: 8 }, draws: { home: 2, away: 2, total: 4 }, loses: { home: 1, away: 2, total: 3 } }, goals: { for: { average: { home: '1.8', away: '1.1', total: '1.5' } }, against: { average: { home: '0.9', away: '1.3', total: '1.1' } } }, clean_sheet: { total: 5 }, failed_to_score: { total: 3 }, cards: { yellow: { '0-15': { total: 4 }, '16-30': { total: 6 } }, red: {} }, lineups: [{ formation: '4-3-3', played: 12 }] }
@@ -122,8 +132,10 @@ function ticketsAnswer(user) {
   const sel = (p, mercado, codigo, prob) => ({ fixture_id: p.fixture_id, mercado, codigo, probabilidade_estimada: prob, justificativa: `Base: ${p.resumo}` })
   const content = {
     bilhetes: [
-      { titulo: 'Bilhete conservador', risco: 'baixo', resumo: 'Seleções de maior probabilidade. Lucro garantido.', selecoes: ps.slice(0, 2).map((p) => sel(p, 'Mais de 1.5 gols', 'mais_1_5', 70)) },
-      { titulo: 'Bilhete equilibrado', risco: 'medio', resumo: 'Mistura resultado e gols.', selecoes: [sel(ps[0], 'Vitória do mandante', 'casa', 48), ...(ps[1] ? [sel(ps[1], 'Ambos marcam', 'ambos_sim', 55)] : []), { fixture_id: 999999, mercado: 'Inventado', codigo: 'casa', probabilidade_estimada: 90, justificativa: 'x' }] },
+      { titulo: 'Odd baixa — gols', faixa: 'baixa', resumo: 'Seleções de maior probabilidade. Lucro garantido.', selecoes: ps.slice(0, 1).map((p) => sel(p, 'Mais de 1.5 gols', 'mais_1_5', 70)) },
+      { titulo: 'Odd média — equilibrado', faixa: 'media', resumo: 'Mistura resultado e gols.', selecoes: [sel(ps[0], 'Vitória do mandante', 'casa', 48), ...(ps[1] ? [sel(ps[1], 'Ambos marcam', 'ambos_sim', 55)] : []), { fixture_id: 999999, mercado: 'Inventado', codigo: 'casa', probabilidade_estimada: 90, justificativa: 'x' }] },
+      { titulo: 'Odd alta — visitante e gols', faixa: 'alta', resumo: 'Mais risco, chance menor.', selecoes: [sel(ps[0], 'Vitória do visitante', 'fora', 30), ...(ps[1] ? [sel(ps[1], 'Ambos marcam', 'ambos_sim', 55)] : [])] },
+      { titulo: 'Odd altíssima — longa', faixa: 'altissima', resumo: 'Bilhete longo de resultados menos prováveis: chance combinada baixa.', selecoes: ps.slice(0, 4).map((p) => sel(p, 'Empate', 'empate', 25)) },
     ],
     observacoes: ['Escalações não confirmadas.'],
   }
