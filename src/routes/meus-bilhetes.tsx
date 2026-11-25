@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Ban, Check, Circle, Plus, Search, TicketCheck, Trash2, Trophy, X } from 'lucide-react'
+import { Ban, Check, Circle, Plus, Search, TicketCheck, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { EmptyState } from '@/components/common/empty-state'
@@ -18,6 +18,7 @@ import { errorMessage, formatDateTime } from '@/lib/format'
 import { addDays, currentGradeDate, formatGradeDate, spParts } from '@/lib/grade'
 import { seo } from '@/lib/seo'
 import { performance, type SelectionStatus, type SlipStatus } from '@/lib/slips'
+import { ODD_TIERS, TIER_LABEL, TIER_RANGE, tierForOdd, type OddTier } from '@/lib/ready-tickets'
 import { cn } from '@/lib/utils'
 import { deleteSlip, listMySlips, type SlipView } from '@/server/slips.functions'
 
@@ -106,7 +107,8 @@ function MeusBilhetesPage() {
       ) : q.data && !q.data.ready ? (
         <EmptyState icon={TicketCheck} title="Meus bilhetes indisponível no momento" description={q.data.message} />
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-[1fr_20rem]">
+        <div className="space-y-5">
+          <SummaryStrip slips={slips} />
           <div className="min-w-0 space-y-4">
             <div role="tablist" aria-label="Situação dos bilhetes" className="-mx-4 flex gap-1 overflow-x-auto px-4 sm:mx-0 sm:inline-flex sm:rounded-full sm:border sm:bg-card sm:p-1">
               {tabBtn('abertos', 'Abertos', counts.abertos)}
@@ -137,7 +139,7 @@ function MeusBilhetesPage() {
                 {q.isLoading ? (
                   <Skeleton className="h-48 rounded-2xl" />
                 ) : visible.length ? (
-                  <div className="space-y-4">
+                  <div className="grid items-start gap-4 lg:grid-cols-2">
                     {visible.map((s) => (
                       <SlipCard key={s.id} s={s} />
                     ))}
@@ -161,7 +163,6 @@ function MeusBilhetesPage() {
               </>
             )}
           </div>
-          <RoundCard slips={slips} />
         </div>
       )}
       <RiskNotice className="mt-8" />
@@ -265,8 +266,8 @@ function SlipCard({ s }: { s: SlipView }) {
   )
 }
 
-/** "Sua rodada": o que está em jogo agora, hoje e amanhã. */
-function RoundCard({ slips }: { slips: SlipView[] }) {
+/** Números no topo: situação dos bilhetes, desempenho e o que está em jogo hoje. */
+function SummaryStrip({ slips }: { slips: SlipView[] }) {
   const today = currentGradeDate()
   const tomorrow = addDays(today, 1)
   const open = slips.filter((s) => s.status === 'open')
@@ -275,44 +276,43 @@ function RoundCard({ slips }: { slips: SlipView[] }) {
   const startsToday = selections.filter((x) => spParts(x.fixture!.kickoff_at).date === today && !isLive(x.fixture!.status_short)).length
   const startsTomorrow = selections.filter((x) => spParts(x.fixture!.kickoff_at).date === tomorrow).length
   const p = performance(slips.map((s) => ({ status: s.status, odd_total: s.odd, stake_units: s.stake })))
-  const row = (label: string, value: React.ReactNode) => (
-    <div className="flex items-center justify-between py-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-display text-lg font-bold text-brand-dark tabular">{value}</span>
-    </div>
-  )
+  const tiles: Array<[string, React.ReactNode, 'win' | 'loss' | undefined]> = [
+    ['Abertos', open.length, undefined],
+    ['Ganhos', p.won, 'win'],
+    ['Perdidos', p.lost, 'loss'],
+    ['Taxa de acerto', p.hitRate != null ? `${p.hitRate}%` : '—', undefined],
+    ['Resultado', p.units != null ? `${p.units > 0 ? '+' : ''}${p.units.toLocaleString('pt-BR')}u` : '—', p.units != null ? (p.units >= 0 ? 'win' : 'loss') : undefined],
+    ['ROI', p.roi != null ? `${p.roi.toLocaleString('pt-BR')}%` : '—', p.roi != null ? (p.roi >= 0 ? 'win' : 'loss') : undefined],
+  ]
   return (
-    <aside className="space-y-4 lg:sticky lg:top-20">
-      <div className="rounded-2xl border bg-card p-5">
-        <h2 className="font-display text-lg font-bold text-brand-dark">Sua rodada</h2>
-        <p className="mb-2 text-xs text-muted-foreground">{formatGradeDate(today)}</p>
-        <div className="divide-y">
-          {row('Bilhetes abertos', open.length)}
-          {row('Jogos ao vivo', live)}
-          {row('Começam hoje', startsToday)}
-          {row('Amanhã', startsTomorrow)}
-        </div>
+    <div className="rounded-2xl border bg-card p-4 shadow-soft">
+      <div className="grid grid-cols-3 gap-3 md:grid-cols-6">
+        {tiles.map(([label, value, tone]) => (
+          <div key={label} className="rounded-xl bg-muted/60 px-3 py-2.5">
+            <p className="text-[11px] font-semibold text-muted-foreground">{label}</p>
+            <p className={cn('font-display text-xl font-bold tabular', tone === 'win' ? 'text-primary' : tone === 'loss' ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>{value}</p>
+          </div>
+        ))}
       </div>
-      <div className="rounded-2xl border bg-card p-5">
-        <h2 className="flex items-center gap-2 font-display text-lg font-bold text-brand-dark">
-          <Trophy className="size-5 text-primary" /> Desempenho
-        </h2>
-        <div className="mt-2 divide-y">
-          {row('Taxa de acerto', p.hitRate != null ? `${p.hitRate}%` : '—')}
-          {row('Resultado', p.units != null ? `${p.units > 0 ? '+' : ''}${p.units.toLocaleString('pt-BR')}u` : '—')}
-          {row('ROI', p.roi != null ? `${p.roi.toLocaleString('pt-BR')}%` : '—')}
-        </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-          Bilhetes são conferidos pelo placar do tempo regulamentar. Jogo adiado ou cancelado anula a seleção (odd 1). Unidades e ROI contam só bilhetes com todas as odds preenchidas.
-        </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2 border-t pt-3 text-xs">
+        <span className="font-bold text-brand-dark">Sua rodada · {formatGradeDate(today)}</span>
+        <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+          <strong className={cn('tabular', live ? 'text-red-600 dark:text-red-400' : 'text-foreground')}>{live}</strong> ao vivo
+        </span>
+        <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+          <strong className="text-foreground tabular">{startsToday}</strong> começam hoje
+        </span>
+        <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground">
+          <strong className="text-foreground tabular">{startsTomorrow}</strong> amanhã
+        </span>
+        <span className="ml-auto hidden text-muted-foreground sm:inline">Conferência pelo placar do tempo normal · adiado/cancelado anula a seleção</span>
       </div>
-    </aside>
+    </div>
   )
 }
 
 function PerformancePanel({ slips, loading }: { slips: SlipView[]; loading: boolean }) {
   if (loading) return <Skeleton className="h-48 rounded-2xl" />
-  const p = performance(slips.map((s) => ({ status: s.status, odd_total: s.odd, stake_units: s.stake })))
   // Por competição: quantos bilhetes de cada liga bateram (bilhetes de uma liga só).
   const byLeague = new Map<string, { won: number; lost: number }>()
   for (const s of slips) {
@@ -323,23 +323,42 @@ function PerformancePanel({ slips, loading }: { slips: SlipView[]; loading: bool
     cur[s.status]++
     byLeague.set(key, cur)
   }
-  const tiles = [
-    ['Bilhetes', p.total],
-    ['Ganhos', p.won],
-    ['Perdidos', p.lost],
-    ['Taxa de acerto', p.hitRate != null ? `${p.hitRate}%` : '—'],
-    ['Resultado', p.units != null ? `${p.units > 0 ? '+' : ''}${p.units.toLocaleString('pt-BR')}u` : '—'],
-    ['ROI', p.roi != null ? `${p.roi.toLocaleString('pt-BR')}%` : '—'],
-  ] as const
+  // Por faixa de odd total (mesmas faixas dos bilhetes prontos).
+  const byTier = new Map<OddTier, { won: number; lost: number }>()
+  for (const sl of slips) {
+    if ((sl.status !== 'won' && sl.status !== 'lost') || sl.odd == null) continue
+    const t = tierForOdd(sl.odd)
+    const cur = byTier.get(t) ?? { won: 0, lost: 0 }
+    cur[sl.status]++
+    byTier.set(t, cur)
+  }
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {tiles.map(([l, v]) => (
-          <div key={l} className="rounded-xl border bg-card p-4">
-            <p className="text-xs font-semibold text-muted-foreground">{l}</p>
-            <p className="font-display text-2xl font-bold text-brand-dark tabular">{v}</p>
-          </div>
-        ))}
+    <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="rounded-2xl border bg-card p-5">
+        <h3 className="mb-3 font-display text-lg font-bold text-brand-dark">Por faixa de odd</h3>
+        {byTier.size ? (
+          <ul className="space-y-3">
+            {ODD_TIERS.filter((t) => byTier.has(t)).map((t) => {
+              const v = byTier.get(t)!
+              const rate = Math.round((v.won / (v.won + v.lost)) * 100)
+              return (
+                <li key={t} className="grid grid-cols-[minmax(0,1fr)_7rem_3rem] items-center gap-3 text-sm">
+                  <span className="truncate font-semibold">
+                    {TIER_LABEL[t]} <span className="text-xs font-normal text-muted-foreground">({TIER_RANGE[t]})</span>
+                  </span>
+                  <span className="h-2 overflow-hidden rounded-full bg-muted">
+                    <span className="block h-full rounded-full bg-primary" style={{ width: `${rate}%` }} />
+                  </span>
+                  <span className="text-right text-xs text-muted-foreground tabular">
+                    {v.won}/{v.won + v.lost}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted-foreground">Aparece quando houver bilhetes conferidos com todas as odds preenchidas.</p>
+        )}
       </div>
       <div className="rounded-2xl border bg-card p-5">
         <h3 className="mb-3 font-display text-lg font-bold text-brand-dark">Por competição</h3>

@@ -59,7 +59,7 @@ function HomePage() {
       <section className="relative">
         <div className="glow-band pointer-events-none absolute inset-x-[-20%] top-[52%] h-[520px] -rotate-6 opacity-80" aria-hidden />
         <div className="pitch-lines pointer-events-none absolute inset-0 opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_70%)]" aria-hidden />
-        <div className="container-page relative grid items-center gap-10 pt-12 pb-16 sm:pt-16 lg:grid-cols-[1.05fr_0.95fr] lg:pt-20 lg:pb-28">
+        <div className="container-page relative grid items-center gap-10 pt-12 pb-16 sm:pt-16 lg:grid-cols-[0.95fr_1.05fr] lg:pt-20 lg:pb-24">
           <div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80 backdrop-blur">
               <BarChart3 className="size-3.5 text-brand-light" /> Estatística de futebol em português · 18+
@@ -88,7 +88,7 @@ function HomePage() {
             </div>
             <p className="mt-5 text-sm text-white/55">Comece grátis. Plano completo a partir de R$ 7,90 por semana.</p>
           </div>
-          <figure className="relative mx-auto w-full max-w-[540px]">
+          <figure className="relative mx-auto w-full max-w-[540px] lg:order-first">
             <div className="absolute inset-[12%] rounded-full bg-brand-light/30 blur-3xl" aria-hidden />
             <img
               src="/celulares-app.webp"
@@ -105,18 +105,8 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ---------------- Ângulos ---------------- */}
-      <section className="container-page relative pt-6 pb-20 text-center">
-        <p className="text-sm font-semibold text-white/60">A gente faz a pesquisa por você</p>
-        <h2 className="mt-2 font-display text-3xl font-bold sm:text-5xl">Cada mercado, testado por vários ângulos</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-white/65 sm:text-lg">
-          Olhamos cada time nos últimos 10 e 5 jogos, no mesmo mando, na mesma competição e no confronto direto. Você vê em quantos jogos o mercado aconteceu e percebe se é um padrão ou só uma fase.
-        </p>
-        <AnglesShowcase featured={featured.data ?? null} />
-      </section>
-
       {/* ---------------- Jogos de hoje ---------------- */}
-      <section className="container-page pb-20">
+      <section className="container-page relative z-10 -mt-6 pb-20">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-bold tracking-[0.16em] text-brand-light uppercase">Grade de hoje</p>
@@ -145,6 +135,28 @@ function HomePage() {
         )}
       </section>
 
+      {/* ---------------- Ângulos ---------------- */}
+      <section className="container-page relative pb-24">
+        <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <p className="text-sm font-semibold text-brand-light">A gente faz a pesquisa por você</p>
+            <h2 className="mt-2 font-display text-3xl font-bold sm:text-5xl">Cada mercado, testado por vários ângulos</h2>
+            <p className="mt-4 text-white/65 sm:text-lg">
+              Olhamos cada time nos últimos 10 e 5 jogos, no mesmo mando, na mesma competição e no confronto direto. Você vê em quantos jogos o mercado aconteceu e percebe se é um padrão ou só uma fase.
+            </p>
+            <ul className="mt-6 space-y-3">
+              {['Em quantos jogos o mercado aconteceu', 'Casa, fora, competição e confronto direto lado a lado', 'Os mais consistentes aparecem primeiro', 'Frequência do passado — não é previsão'].map((n) => (
+                <li key={n} className="flex items-center gap-3 text-white/80">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-light/15 text-xs font-bold text-brand-light">✓</span>
+                  {n}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <AnglesShowcase featured={featured.data ?? null} />
+        </div>
+      </section>
+
       {featured.data && (
         <section className="container-page pb-24 text-foreground">
           <FeaturedMatchCard data={featured.data} />
@@ -153,21 +165,19 @@ function HomePage() {
 
       {/* ---------------- O que você recebe ---------------- */}
       <section className="container-page pb-24">
-        <div className="text-center">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
           <h2 className="font-display text-3xl font-bold sm:text-5xl">O que você recebe?</h2>
-          <p className="mx-auto mt-3 max-w-xl text-white/65 sm:text-lg">Os números por trás de cada jogo, os recortes que mudam a leitura e tudo organizado no celular.</p>
-        </div>
-        <div className="mt-14 grid items-center gap-12 lg:grid-cols-2">
-          <PhonePreview featured={featured.data ?? null} />
-          <ul className="space-y-8">
+          <p className="mt-3 max-w-xl text-white/65 sm:text-lg">Os números por trás de cada jogo, os recortes que mudam a leitura e tudo organizado no celular.</p>
+          <ul className="mt-10 grid gap-6 sm:grid-cols-2">
             {[
               { icon: BarChart3, title: 'Estatísticas que fazem a diferença', text: 'Últimos 5 e 10 jogos de cada time: gols, finalizações, escanteios, cartões e posse, com gráficos, radar comparativo e leitura da partida.' },
               { icon: Layers, title: 'Mercados por ângulo', text: 'Mais de 1,5 gols, ambos marcam, escanteios, cartões… cada mercado com a frequência geral, em casa ou fora, na competição e no confronto direto.' },
               { icon: Sparkles, title: 'Análises e bilhetes prontos', text: 'Análises escritas a partir dos dados reais da partida e bilhetes do dia em quatro faixas: odd baixa, média, alta e altíssima, com odds quando a fonte informa.' },
               { icon: Star, title: 'Meus bilhetes e favoritos', text: 'Monte seus bilhetes no site e acompanhe sozinho se bateram, com taxa de acerto e resultado em unidades. Siga seus times e busque qualquer jogo.' },
             ].map((f) => (
-              <li key={f.title} className="flex gap-4">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-brand-light/30 bg-brand-light/10 text-brand-light">
+              <li key={f.title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <span className="mb-3 grid size-11 place-items-center rounded-xl border border-brand-light/30 bg-brand-light/10 text-brand-light">
                   <f.icon className="size-5" />
                 </span>
                 <div>
@@ -177,6 +187,8 @@ function HomePage() {
               </li>
             ))}
           </ul>
+          </div>
+          <PhonePreview featured={featured.data ?? null} />
         </div>
       </section>
 
@@ -199,12 +211,17 @@ function HomePage() {
       </section>
 
       {/* ---------------- Perguntas ---------------- */}
-      <section className="container-page pb-24">
-        <div className="mb-10 text-center">
+      <section className="container-page grid gap-10 pb-24 lg:grid-cols-[0.8fr_1.2fr]">
+        <div>
           <h2 className="font-display text-3xl font-bold sm:text-5xl">Perguntas frequentes</h2>
           <p className="mt-3 text-white/65 sm:text-lg">O que você precisa saber antes de começar.</p>
+          <p className="mt-6 text-sm">
+            <Link to="/sobre" className="font-semibold text-brand-light hover:underline">
+              Ver todas as perguntas →
+            </Link>
+          </p>
         </div>
-        <Accordion type="single" collapsible defaultValue="0" className="mx-auto max-w-3xl space-y-3">
+        <Accordion type="single" collapsible defaultValue="0" className="space-y-3">
           {HOME_FAQ.map((f, i) => (
             <AccordionItem key={f.q} value={String(i)} className="rounded-xl border border-white/10 bg-white/[0.03] px-5 last:border-b">
               <AccordionTrigger className="text-base text-white hover:text-brand-light [&>svg]:text-white/60">{f.q}</AccordionTrigger>
@@ -212,27 +229,23 @@ function HomePage() {
             </AccordionItem>
           ))}
         </Accordion>
-        <p className="mt-6 text-center text-sm">
-          <Link to="/sobre" className="font-semibold text-brand-light hover:underline">
-            Ver todas as perguntas
-          </Link>
-        </p>
       </section>
 
       {/* ---------------- Chamada final ---------------- */}
       <section className="container-page">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-light via-[#22c55e] to-[#15803d] px-6 py-12 text-ink sm:px-12">
-          <img src="/logo.png" alt="" width={520} height={399} className="pointer-events-none absolute -right-10 -bottom-10 hidden w-[380px] opacity-90 drop-shadow-2xl md:block" />
-          <div className="relative max-w-xl">
+        <div className="relative overflow-hidden rounded-3xl border border-brand-light/30 bg-gradient-to-b from-brand-deep to-ink px-6 py-12 text-center text-white sm:px-12">
+          <div className="glow-band pointer-events-none absolute inset-x-0 -bottom-40 h-72 opacity-60" aria-hidden />
+          <img src="/logo.png" alt="" width={520} height={399} className="relative mx-auto w-40 drop-shadow-2xl sm:w-48" />
+          <div className="relative mx-auto mt-4 max-w-2xl">
             <h2 className="font-display text-3xl leading-tight font-bold sm:text-5xl">Os jogos de hoje já estão esperando</h2>
-            <p className="mt-4 text-lg text-ink/80">Veja a grade do dia, a forma dos times e os números de cada partida. Assine o Pro quando quiser liberar tudo.</p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="bg-ink text-white hover:bg-ink/85">
+            <p className="mt-4 text-lg text-white/75">Veja a grade do dia, a forma dos times e os números de cada partida. Assine o Pro quando quiser liberar tudo.</p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild size="lg" className="bg-brand-light text-ink hover:bg-brand-light/90">
                 <Link to="/jogos">
                   <CalendarDays /> Ver jogos de hoje
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-ink/40 bg-transparent text-ink hover:bg-ink/10 hover:text-ink">
+              <Button asChild size="lg" variant="outline" className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white">
                 <Link to="/busca">
                   <Search /> Buscar um time
                 </Link>
@@ -254,54 +267,31 @@ function HomePage() {
 
 /** Vitrine dos mercados por ângulo com dados reais do destaque do dia. */
 function AnglesShowcase({ featured }: { featured: FeaturedMatch | null }) {
-  const notes = ['Veja em quantos jogos o mercado aconteceu', 'Compare casa, fora, competição e confronto direto', 'Os mais consistentes aparecem primeiro', 'Frequência do passado — não é previsão']
   const markets = featured?.markets ?? []
   const logoOf = (side: 'home' | 'away') => (side === 'home' ? featured?.fixture.home_team_logo : featured?.fixture.away_team_logo)
+  if (!markets.length) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-white/75">
+        <p className="font-display text-lg font-bold text-white">Exemplo de leitura</p>
+        <p className="mt-2">
+          <strong className="text-brand-light">7/10</strong> nos últimos 10 jogos · <strong className="text-brand-light">4/5</strong> jogando em casa ·{' '}
+          <strong className="text-brand-light">3/3</strong> no confronto direto
+        </p>
+        <p className="mt-3 text-xs text-white/45">Os mercados reais aparecem aqui quando as estatísticas do dia forem coletadas.</p>
+      </div>
+    )
+  }
   return (
-    <div className="relative mx-auto mt-12 grid max-w-5xl items-center gap-6 lg:grid-cols-[1fr_1.6fr_1fr]">
-      <ul className="hidden space-y-6 lg:block">
-        {notes.slice(0, 2).map((n) => (
-          <li key={n} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-left text-sm text-white/75">
-            {n}
-          </li>
-        ))}
-      </ul>
-      {markets.length ? (
-        <div className="relative space-y-4">
-          <div className="absolute inset-6 rounded-full bg-brand-light/20 blur-3xl" aria-hidden />
-          {markets.map((m, i) => (
-            <div key={m.key} className={i === 1 ? 'relative lg:translate-x-8' : 'relative lg:-translate-x-4'}>
-              <MarketAngleCard m={m} tone="dark" defaultOpen={i === 0} logo={<TeamCrest name={m.team} logo={logoOf(m.side)} size={32} />} />
-            </div>
-          ))}
-          <p className="relative text-xs text-white/45">
-            Dados reais de {featured!.fixture.home_team_name} x {featured!.fixture.away_team_name}, hoje às {featured!.fixture.local_time}.
-          </p>
+    <div className="relative space-y-4">
+      <div className="absolute inset-8 rounded-full bg-brand-light/20 blur-3xl" aria-hidden />
+      {markets.map((m, i) => (
+        <div key={m.key} className={i === 1 ? 'relative sm:ml-10' : 'relative sm:mr-10'}>
+          <MarketAngleCard m={m} tone="dark" defaultOpen={i === 0} logo={<TeamCrest name={m.team} logo={logoOf(m.side)} size={32} />} />
         </div>
-      ) : (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 text-left text-white/75">
-          <p className="font-display text-lg font-bold text-white">Exemplo de leitura</p>
-          <p className="mt-2">
-            <strong className="text-brand-light">7/10</strong> nos últimos 10 jogos · <strong className="text-brand-light">4/5</strong> jogando em casa ·{' '}
-            <strong className="text-brand-light">3/3</strong> no confronto direto
-          </p>
-          <p className="mt-3 text-xs text-white/45">Os mercados reais aparecem aqui quando as estatísticas do dia forem coletadas.</p>
-        </div>
-      )}
-      <ul className="hidden space-y-6 lg:block">
-        {notes.slice(2).map((n) => (
-          <li key={n} className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-left text-sm text-white/75">
-            {n}
-          </li>
-        ))}
-      </ul>
-      <ul className="flex flex-wrap justify-center gap-2 lg:hidden">
-        {notes.map((n) => (
-          <li key={n} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/70">
-            {n}
-          </li>
-        ))}
-      </ul>
+      ))}
+      <p className="relative text-right text-xs text-white/45">
+        Dados reais de {featured!.fixture.home_team_name} x {featured!.fixture.away_team_name}, hoje às {featured!.fixture.local_time}.
+      </p>
     </div>
   )
 }

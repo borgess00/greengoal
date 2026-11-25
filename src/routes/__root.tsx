@@ -6,7 +6,6 @@ import appCss from '@/styles.css?url'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Sidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/top-bar'
 import { SlipDock } from '@/components/slips/slip-dock'
 import { AgeGate } from '@/components/layout/age-gate'
@@ -48,8 +47,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 })
 
 function RootLayout() {
-  // A página inicial é a vitrine (cabeçalho no topo); o resto é o app, com
-  // barra lateral no computador e barra inferior no celular.
+  // A página inicial é a vitrine; o resto é o app, com abas no topo no
+  // computador e barra inferior no celular.
   const landing = useRouterState({ select: (s) => s.location.pathname === '/' })
   return (
     <AuthProvider>
@@ -66,15 +65,12 @@ function RootLayout() {
         </>
       ) : (
         <>
-          <Sidebar className="fixed inset-y-0 left-0 hidden w-60 lg:flex" />
-          <div className="lg:pl-60">
-            <Header app />
-            <TopBar className="hidden lg:flex" />
-            <main id="conteudo" className="min-h-[70vh]">
-              <Outlet />
-            </main>
-            <Footer />
-          </div>
+          <Header app />
+          <TopBar className="hidden lg:block" />
+          <main id="conteudo" className="min-h-[70vh]">
+            <Outlet />
+          </main>
+          <Footer />
         </>
       )}
       <SlipDock />

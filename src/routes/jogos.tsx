@@ -102,6 +102,10 @@ function JogosPage() {
     [all, search.pais, search.liga, status],
   )
   const groups = React.useMemo(() => groupFixtures(filtered, priority, order), [filtered, priority, order])
+  // Competições para a coluna de filtros: respeita só a situação escolhida.
+  const byStatus = React.useMemo(() => all.filter((f) => status === 'todos' || statusOf(f) === status), [all, status])
+  const statusGroups = React.useMemo(() => groupFixtures(byStatus, priority), [byStatus, priority])
+  const statusTotal = byStatus.length
   const ordered = React.useMemo(() => groups.flatMap((g) => g.leagues.flatMap((l) => l.fixtures)), [groups])
   const selected = ordered.find((f) => f.id === search.jogo) ?? ordered[0]
 
@@ -157,6 +161,7 @@ function JogosPage() {
           {chip('encerrados', 'Encerradas')}
         </div>
         <div className="flex w-full gap-2 sm:ml-auto sm:w-auto">
+          <div className="flex min-w-0 flex-1 gap-2 xl:hidden">
           <NativeSelect aria-label="País" value={search.pais ?? ''} onChange={(e) => navigate({ search: (s) => ({ ...s, pais: e.target.value || undefined, liga: undefined, jogo: undefined }) })} className="h-10 min-w-0 flex-1 sm:w-44">
             <option value="">Todos os países ({all.length})</option>
             {countries.map((c) => (
@@ -173,6 +178,7 @@ function JogosPage() {
               </option>
             ))}
           </NativeSelect>
+          </div>
           <Button variant="outline" size="icon" className="shrink-0" aria-label={order === 'asc' ? 'Mais cedo primeiro (inverter)' : 'Mais tarde primeiro (inverter)'} title={order === 'asc' ? 'Mais cedo primeiro' : 'Mais tarde primeiro'} onClick={() => navigate({ search: (s) => ({ ...s, ordem: order === 'asc' ? 'desc' : undefined }) })}>
             <ArrowDownUp className="size-4" />
           </Button>
@@ -200,7 +206,14 @@ function JogosPage() {
           }
         />
       ) : (
-        <div className={cn('grid items-start gap-5 lg:grid-cols-[minmax(0,26rem)_1fr]', isFetching && 'opacity-80')}>
+        <div className={cn('grid items-start gap-5 lg:grid-cols-[minmax(0,26rem)_1fr] xl:grid-cols-[13.5rem_minmax(0,24rem)_1fr]', isFetching && 'opacity-80')}>
+          <CompetitionFacets
+            groups={statusGroups}
+            pais={search.pais}
+            liga={search.liga}
+            total={statusTotal}
+            onPick={(pais, liga) => navigate({ search: (s) => ({ ...s, pais, liga, jogo: undefined }) })}
+          />
           <div className="overflow-hidden rounded-2xl border bg-card">
             <p className="flex items-center justify-between gap-3 border-b px-4 py-2.5 text-xs text-muted-foreground">
               <span>
@@ -232,11 +245,57 @@ function JogosPage() {
               </section>
             ))}
           </div>
-          <div className="sticky top-20 hidden lg:block">{selected && <MatchPanel key={selected.id} f={selected} />}</div>
+          <div className="sticky top-32 hidden lg:block">{selected && <MatchPanel key={selected.id} f={selected} />}</div>
         </div>
       )}
       <RiskNotice className="mt-8" />
     </div>
+  )
+}
+
+/** Coluna de competições (telas grandes): país e liga com a contagem de jogos. */
+function CompetitionFacets({
+  groups,
+  pais,
+  liga,
+  total,
+  onPick,
+}: {
+  groups: ReturnType<typeof groupFixtures>
+  pais?: string
+  liga?: number
+  total: number
+  onPick: (pais: string | undefined, liga: number | undefined) => void
+}) {
+  const item = (active: boolean) =>
+    cn('flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition', active ? 'bg-secondary font-semibold text-brand-dark' : 'text-muted-foreground hover:bg-muted hover:text-foreground')
+  return (
+    <nav aria-label="Competições" className="sticky top-32 hidden max-h-[calc(100vh-9rem)] overflow-y-auto rounded-2xl border bg-card p-3 xl:block">
+      <p className="mb-2 px-2.5 text-xs font-bold tracking-wide text-muted-foreground uppercase">Competições</p>
+      <button type="button" className={item(!pais && !liga)} onClick={() => onPick(undefined, undefined)}>
+        <Globe className="size-4 shrink-0" /> <span className="flex-1">Todas</span>
+        <span className="text-xs tabular">{total}</span>
+      </button>
+      {groups.map((g) => (
+        <div key={g.country} className="mt-2">
+          <button type="button" className={cn(item(pais === g.country && !liga), 'font-semibold')} onClick={() => onPick(g.country, undefined)}>
+            <span className="flex-1 truncate">{g.country}</span>
+            <span className="text-xs tabular">{g.total}</span>
+          </button>
+          <ul className="ml-2 border-l pl-1.5">
+            {g.leagues.map((l) => (
+              <li key={l.leagueId}>
+                <button type="button" className={item(liga === l.leagueId)} onClick={() => onPick(g.country, l.leagueId)}>
+                  {l.leagueLogo ? <img src={l.leagueLogo} alt="" width={14} height={14} className="size-3.5 shrink-0 object-contain" loading="lazy" /> : <span className="size-3.5 shrink-0" />}
+                  <span className="flex-1 truncate">{l.leagueName}</span>
+                  <span className="text-xs tabular">{l.fixtures.length}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
   )
 }
 
@@ -387,7 +446,7 @@ function MatchPanel({ f }: { f: FixtureRow }) {
         {bettable && (
           <TabsContent value="bilhete">
             <div className="rounded-xl border bg-card p-5">
-              <MarketPicker fixture={f} />
+              <MarketPicker fixture={f} compact />
             </div>
           </TabsContent>
         )}
