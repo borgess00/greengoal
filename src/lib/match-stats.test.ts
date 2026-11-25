@@ -79,3 +79,45 @@ describe('teamGames / summarizeWindow', () => {
     expect(matchReading('Casa', 'Fora', null, null)).toEqual([])
   })
 })
+
+describe('marketAngles', () => {
+  const row = (gf: number, ga: number, venue: 'casa' | 'fora', league = 'Liga', corners: number | null = null): import('./match-stats').GameRow => ({
+    fixtureId: Math.random(),
+    date: '2026-11-01',
+    league,
+    venue,
+    opponent: 'X',
+    opponentLogo: null,
+    gf,
+    ga,
+    result: gf > ga ? 'V' : gf < ga ? 'D' : 'E',
+    stats:
+      corners == null
+        ? null
+        : { shots: 10, shotsOn: 4, shotsAgainst: 8, cornersFor: corners, cornersAgainst: 4, yellow: 1, red: 0, yellowOpp: 2, redOpp: 0, possession: 50, fouls: 10 },
+  })
+  it('conta acertos por ângulo e mede a consistência', async () => {
+    const { marketAngles, rankMarkets } = await import('./match-stats')
+    const games = [row(2, 1, 'casa', 'Liga', 6), row(1, 1, 'fora', 'Copa', 5), row(3, 0, 'casa'), row(0, 0, 'fora'), row(2, 2, 'casa'), row(1, 0, 'casa')]
+    const h2h = [row(2, 1, 'casa'), row(1, 2, 'fora'), row(0, 1, 'casa')]
+    const list = marketAngles({ team: 'Time', side: 'home', games, venue: 'casa', league: 'Liga', opponent: 'Rival', h2h })
+    const over15 = list.find((m) => m.key === 'home-over15')!
+    expect(over15.angles.map((a) => [a.label, a.hits, a.total])).toEqual([
+      ['nos últimos 6 jogos', 4, 6],
+      ['nos últimos 5 jogos', 4, 5],
+      ['jogando em casa', 3, 4],
+      ['na Liga', 3, 5],
+      ['contra o Rival', 2, 3],
+    ])
+    expect(over15.rate).toBe(67)
+    expect(over15.floor).toBe(60)
+    expect(list.find((m) => m.key === 'home-scores')!.market).toBe('Time marca')
+    // Escanteios só com 2 jogos de estatística: amostra pequena, fica de fora.
+    expect(list.find((m) => m.key === 'home-corners9')).toBeUndefined()
+    // Com 3+ jogos de estatística o rótulo informa quantos entraram na conta.
+    const more = [...games.slice(0, 2), row(1, 0, 'casa', 'Liga', 7), ...games.slice(2)]
+    const corners = marketAngles({ team: 'Time', side: 'home', games: more, venue: 'casa', league: 'Liga', opponent: 'Rival', h2h: [] }).find((m) => m.key === 'home-corners9')!
+    expect(corners.angles[0]).toEqual({ label: 'nos últimos 7 jogos (3 com estatística)', hits: 3, total: 3 })
+    expect(rankMarkets(list)[0].floor).toBeGreaterThanOrEqual(rankMarkets(list)[1].floor)
+  })
+})

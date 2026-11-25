@@ -279,3 +279,98 @@ export function matchReading(home: string, away: string, h: WindowSummary | null
   }
   return out
 }
+
+// ---------------------------------------------------------------------
+// Mercados por ângulo: em quantos jogos cada mercado aconteceu, olhando a
+// mesma equipe por vários recortes (geral, mando, competição, confronto).
+// É frequência histórica — não é previsão.
+// ---------------------------------------------------------------------
+
+export interface AngleHit {
+  label: string
+  hits: number
+  total: number
+}
+
+export interface MarketAngles {
+  key: string
+  market: string
+  team: string
+  side: 'home' | 'away'
+  /** Primeiro ângulo = últimos 10 jogos (ou menos, se a equipe tiver menos) — base da taxa principal. */
+  angles: AngleHit[]
+  rate: number // % no ângulo principal
+  /** Menor taxa entre os ângulos com 3+ jogos: mede a consistência. */
+  floor: number
+  sample: number
+}
+
+type Market = { key: string; label: (team: string) => string; needsStats: boolean; test: (r: GameRow) => boolean | null }
+
+const cornersTotal = (r: GameRow) => (r.stats?.cornersFor != null && r.stats.cornersAgainst != null ? r.stats.cornersFor + r.stats.cornersAgainst : null)
+const cardsTotal = (r: GameRow) =>
+  r.stats?.yellow != null && r.stats.yellowOpp != null ? r.stats.yellow + r.stats.yellowOpp + (r.stats.red ?? 0) + (r.stats.redOpp ?? 0) : null
+
+export const MARKETS: Market[] = [
+  { key: 'over15', label: () => 'Mais de 1,5 gols no jogo', needsStats: false, test: (r) => r.gf + r.ga > 1.5 },
+  { key: 'over25', label: () => 'Mais de 2,5 gols no jogo', needsStats: false, test: (r) => r.gf + r.ga > 2.5 },
+  { key: 'under35', label: () => 'Menos de 3,5 gols no jogo', needsStats: false, test: (r) => r.gf + r.ga < 3.5 },
+  { key: 'btts', label: () => 'Ambos marcam', needsStats: false, test: (r) => r.gf > 0 && r.ga > 0 },
+  { key: 'scores', label: (t) => `${t} marca`, needsStats: false, test: (r) => r.gf > 0 },
+  { key: 'clean', label: (t) => `${t} não sofre gol`, needsStats: false, test: (r) => r.ga === 0 },
+  { key: 'corners9', label: () => '9+ escanteios no jogo', needsStats: true, test: (r) => (cornersTotal(r) == null ? null : cornersTotal(r)! >= 9) },
+  { key: 'cards4', label: () => '4+ cartões no jogo', needsStats: true, test: (r) => (cardsTotal(r) == null ? null : cardsTotal(r)! >= 4) },
+]
+
+function hitsOf(rows: GameRow[], m: Market, label: string): AngleHit {
+  const results = rows.map((r) => m.test(r)).filter((v): v is boolean => v !== null)
+  // Rótulo honesto: diz quantos jogos entraram de fato na conta.
+  const counted = results.length < rows.length ? `${label} (${results.length} com estatística)` : label
+  return { label: counted, hits: results.filter(Boolean).length, total: results.length }
+}
+
+const pctOf = (a: AngleHit) => (a.total ? Math.round((a.hits / a.total) * 100) : 0)
+
+export function marketAngles(opts: {
+  team: string
+  side: 'home' | 'away'
+  games: GameRow[]
+  /** Mando do jogo analisado para esta equipe. */
+  venue: 'casa' | 'fora'
+  league: string
+  opponent: string
+  h2h: GameRow[]
+}): MarketAngles[] {
+  const { team, side, games, venue, league, opponent, h2h } = opts
+  const venueGames = games.filter((g) => g.venue === venue).slice(0, 10)
+  const leagueGames = games.filter((g) => g.league === league).slice(0, 10)
+  const out: MarketAngles[] = []
+  for (const m of MARKETS) {
+    const angles = [
+      hitsOf(games.slice(0, 10), m, `nos últimos ${Math.min(10, games.length)} jogos`),
+      hitsOf(games.slice(0, 5), m, `nos últimos ${Math.min(5, games.length)} jogos`),
+      hitsOf(venueGames, m, venue === 'casa' ? 'jogando em casa' : 'jogando fora'),
+      hitsOf(leagueGames, m, `na ${league}`),
+      hitsOf(h2h.slice(0, 10), m, `contra o ${opponent}`),
+    ].filter((a) => a.total > 0)
+    const main = angles[0]
+    if (!main || main.total < 3) continue
+    const solid = angles.filter((a) => a.total >= 3)
+    out.push({
+      key: `${side}-${m.key}`,
+      market: m.label(team),
+      team,
+      side,
+      angles,
+      rate: pctOf(main),
+      floor: Math.min(...solid.map(pctOf)),
+      sample: main.total,
+    })
+  }
+  return out
+}
+
+/** Ordena pelos mercados mais consistentes entre os ângulos (amostra maior desempata). */
+export function rankMarkets(list: MarketAngles[]): MarketAngles[] {
+  return [...list].sort((a, b) => b.floor - a.floor || b.rate - a.rate || b.sample - a.sample)
+}

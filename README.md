@@ -99,6 +99,13 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 - **Automação**: coleta as estatísticas de até `auto_max_stats` partidas por execução (sem IA; funciona mesmo sem a chave do Claude). Para “últimos 10” ter finalizações/escanteios em todos os jogos, suba “Jogos com estatística detalhada” para 10 em Admin › Coleta (mais consultas à API-Football).
 - Banco: rode `supabase/atualizacao-estatisticas.sql` (quem já instalou). Sem ela o site continua funcionando, mas sem forma nos cartões e sem favoritos.
 
+## Visual e mercados por ângulo (inspirado em apps esportivos premium)
+
+- **Entrada do site** escura (`src/routes/index.tsx`): título grande, imagem dos celulares (`public/celulares-app*.webp`, marcada como ilustrativa), vitrine dos mercados com dados reais do destaque do dia, grade de hoje, “O que você recebe”, planos, perguntas frequentes (`src/lib/faq.ts`) e chamada final.
+- **Mercados por ângulo** (`marketAngles` em `src/lib/match-stats.ts`): cada mercado (mais de 1,5/2,5 gols, menos de 3,5, ambos marcam, time marca, não sofre gol, 9+ escanteios, 4+ cartões) contado nos últimos 10 e 5 jogos, no mesmo mando, na mesma competição e no confronto direto; ordenado pela consistência (menor taxa entre os ângulos com 3+ jogos). O rótulo sempre diz quantos jogos entraram na conta. Aba “Mercados” na partida (assinantes).
+- **Planos** (`src/components/billing/pricing-plans.tsx`): Grátis x GreenGoal Pro, com seletor semanal / mensal / anual e economia calculada em relação ao mensal.
+- Cabeçalho, rodapé e barra do celular escuros (tokens `--ink*` em `src/styles.css`).
+
 ## Pagamentos (Asaas)
 
 - Com `ASAAS_API_KEY` configurada, a contratação é real: o site cria o cliente (CPF/CNPJ) e a assinatura no Asaas (ciclo semanal, mensal ou anual) e leva a pessoa à fatura do Asaas (Pix ou cartão). Sem a chave, continua o checkout demonstrativo.

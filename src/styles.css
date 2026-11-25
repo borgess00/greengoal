@@ -33,6 +33,11 @@
   --brand-light: #4ade80;
   --warning: #b45309;
 
+  /* Superfícies escuras (entrada do site, cabeçalho, rodapé). */
+  --ink: #050f0b;
+  --ink-2: #0a1a13;
+  --ink-3: #112a1f;
+
   /* Séries dos gráficos (mandante x visitante) — par validado para daltonismo. */
   --series-home: #047857;
   --series-away: #84cc16;
@@ -68,6 +73,9 @@
   --color-brand-dark: var(--brand-dark);
   --color-brand-light: var(--brand-light);
   --color-warning: var(--warning);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
   --color-series-home: var(--series-home);
   --color-series-away: var(--series-away);
   --color-result-win: var(--result-win);
@@ -124,6 +132,17 @@
       linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
       linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px);
     background-size: 48px 48px;
+  }
+  /* Faixa de brilho verde da entrada (inspirada em telas de app esportivo). */
+  .glow-band {
+    background:
+      radial-gradient(60% 55% at 70% 45%, rgb(74 222 128 / 0.55), transparent 70%),
+      radial-gradient(45% 40% at 30% 70%, rgb(22 163 74 / 0.5), transparent 70%),
+      radial-gradient(35% 30% at 90% 20%, rgb(190 242 100 / 0.35), transparent 70%);
+    filter: blur(40px);
+  }
+  .text-glow {
+    text-shadow: 0 0 40px rgb(74 222 128 / 0.35);
   }
   .tabular {
     font-variant-numeric: tabular-nums;

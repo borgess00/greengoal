@@ -35,53 +35,53 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/60 bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/75">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-ink text-white">
       <div className="container-page flex h-16 items-center justify-between gap-4">
-        <Logo />
+        <Logo light />
 
         <nav className="hidden items-center gap-1 lg:flex" aria-label="Principal">
           {NAV.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-full px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-secondary hover:text-brand-dark"
-              activeProps={{ className: 'bg-secondary !text-brand-dark' }}
+              className="rounded-full px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+              activeProps={{ className: 'bg-white/10 !text-white' }}
             >
               {item.label}
             </Link>
           ))}
           {isAdmin && (
-            <Link to="/admin" className="rounded-full px-3.5 py-2 text-sm font-semibold text-muted-foreground transition hover:bg-secondary hover:text-brand-dark" activeProps={{ className: 'bg-secondary !text-brand-dark' }}>
+            <Link to="/admin" className="rounded-full px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white" activeProps={{ className: 'bg-white/10 !text-white' }}>
               Admin
             </Link>
           )}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="icon" aria-label="Buscar jogos" title="Buscar jogos">
+          <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" aria-label="Buscar jogos" title="Buscar jogos">
             <Link to="/busca">
               <Search className="size-5" />
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label="Favoritos" title="Favoritos">
+          <Button asChild variant="ghost" size="icon" className="hidden text-white hover:bg-white/10 hover:text-white lg:inline-flex" aria-label="Favoritos" title="Favoritos">
             <Link to="/favoritos">
               <Star className="size-5" />
             </Link>
           </Button>
           <div className="hidden items-center gap-2 sm:flex">
             {user ? (
-              <Button asChild variant="ghost" size="sm" className="h-9">
+              <Button asChild variant="ghost" size="sm" className="h-9 text-white hover:bg-white/10 hover:text-white">
                 <Link to="/perfil">
                   <UserRound /> Minha conta
                 </Link>
               </Button>
             ) : (
-              <Button asChild variant="ghost" size="sm" className="h-9" disabled={loading}>
+              <Button asChild variant="ghost" size="sm" className="h-9 text-white hover:bg-white/10 hover:text-white" disabled={loading}>
                 <Link to="/auth">Entrar</Link>
               </Button>
             )}
             {showSubscribe && (
-              <Button asChild size="sm" className="h-9">
+              <Button asChild size="sm" className="h-9 bg-brand-light text-ink hover:bg-brand-light/90">
                 <Link to="/planos">Assinar</Link>
               </Button>
             )}
@@ -89,7 +89,7 @@ export function Header() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="lg:hidden" aria-label="Abrir menu">
+              <Button variant="outline" size="icon" className="border-white/20 bg-white/5 text-white hover:bg-white/15 hover:text-white lg:hidden" aria-label="Abrir menu">
                 <Menu className="size-5" />
               </Button>
             </SheetTrigger>

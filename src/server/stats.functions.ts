@@ -5,21 +5,25 @@ import { z } from 'zod'
 import type { ApiFixture, ApiFixtureTeamStatistics } from '@/lib/api-football-types'
 import { isFinished } from '@/lib/fixture-status'
 import { addDays, currentGradeDate } from '@/lib/grade'
-import { formString, summarizeWindow, teamGames, type GameRow, type WindowSummary } from '@/lib/match-stats'
+import { formString, marketAngles, rankMarkets, summarizeWindow, teamGames, type GameRow, type MarketAngles, type WindowSummary } from '@/lib/match-stats'
 import type { FixtureRow } from '@/lib/types'
 import { optionalAuth } from './auth-middleware'
 import { userHasActiveSubscription, userIsAdmin } from './access.server'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 import { withForms } from './forms.server'
 
-type Recent = { lastFixtures?: { home?: ApiFixture[]; away?: ApiFixture[] } | null; matchStats?: Record<string, ApiFixtureTeamStatistics[]> | null }
+type Recent = {
+  lastFixtures?: { home?: ApiFixture[]; away?: ApiFixture[] } | null
+  matchStats?: Record<string, ApiFixtureTeamStatistics[]> | null
+  h2h?: ApiFixture[] | null
+}
 
 /** Carrega só os jogos recentes e as estatísticas do pacote (sem jogadores, odds etc.). */
 async function loadRecent(fixtureIds: number[]) {
   if (!fixtureIds.length) return new Map<number, Recent & { collected_at: string }>()
   const { data } = await supabaseAdmin()
     .from('fixture_data')
-    .select('fixture_id, collected_at, lastFixtures:payload->lastFixtures, matchStats:payload->matchStats')
+    .select('fixture_id, collected_at, lastFixtures:payload->lastFixtures, matchStats:payload->matchStats, h2h:payload->h2h')
     .in('fixture_id', fixtureIds)
   return new Map((data ?? []).map((r) => [r.fixture_id as number, r as unknown as Recent & { collected_at: string }]))
 }
@@ -47,7 +51,7 @@ type StatFixture = Pick<
 export type MatchStatsResult =
   | { status: 'nodata'; isAdmin: boolean }
   | { status: 'locked'; needsLogin: boolean; form: { home: string; away: string } }
-  | { status: 'ok'; isAdmin: boolean; collectedAt: string; home: GameRow[]; away: GameRow[] }
+  | { status: 'ok'; isAdmin: boolean; collectedAt: string; home: GameRow[]; away: GameRow[]; h2hHome: GameRow[]; h2hAway: GameRow[] }
 
 /**
  * Painel de estatísticas da partida. A forma recente (resultados) é pública;
@@ -77,7 +81,16 @@ export const getMatchStats = createServerFn({ method: 'GET' })
         () => undefined,
       )
     if (!sub && !admin) return { status: 'locked', needsLogin: !userId, form: { home: formString(home), away: formString(away) } }
-    return { status: 'ok', isAdmin: admin, collectedAt: recent.collected_at, home, away }
+    const h2h = recent.h2h ?? []
+    return {
+      status: 'ok',
+      isAdmin: admin,
+      collectedAt: recent.collected_at,
+      home,
+      away,
+      h2hHome: teamGames(fx.home_team_id as number, h2h, recent.matchStats ?? undefined),
+      h2hAway: teamGames(fx.away_team_id as number, h2h, recent.matchStats ?? undefined),
+    }
   })
 
 export interface FeaturedMatch {
@@ -86,6 +99,8 @@ export interface FeaturedMatch {
   form: { home: string; away: string }
   home: WindowSummary | null
   away: WindowSummary | null
+  /** Os mercados mais consistentes entre os ângulos (amostra de vitrine). */
+  markets: MarketAngles[]
 }
 
 /**
@@ -118,8 +133,30 @@ export const getFeaturedMatch = createServerFn({ method: 'GET' }).handler(async 
     const home = teamGames(fixture.home_team_id, recent?.lastFixtures?.home, recent?.matchStats ?? undefined)
     const away = teamGames(fixture.away_team_id, recent?.lastFixtures?.away, recent?.matchStats ?? undefined)
     if (!home.length || !away.length) continue
+    const h2h = recent?.h2h ?? []
+    const markets = rankMarkets([
+      ...marketAngles({
+        team: fixture.home_team_name,
+        side: 'home',
+        games: home,
+        venue: 'casa',
+        league: fixture.league_name,
+        opponent: fixture.away_team_name,
+        h2h: teamGames(fixture.home_team_id, h2h, undefined),
+      }),
+      ...marketAngles({
+        team: fixture.away_team_name,
+        side: 'away',
+        games: away,
+        venue: 'fora',
+        league: fixture.league_name,
+        opponent: fixture.home_team_name,
+        h2h: teamGames(fixture.away_team_id, h2h, undefined),
+      }),
+    ]).slice(0, 2)
     return {
       fixture,
+      markets,
       window: 5,
       form: { home: formString(home), away: formString(away) },
       home: summarizeWindow(home, 5),

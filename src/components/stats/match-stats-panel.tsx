@@ -8,20 +8,21 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { errorMessage } from '@/lib/format'
-import { matchAverages, matchReading, radarValues, summarizeWindow, type GameRow, type GameStats, type WindowSummary } from '@/lib/match-stats'
+import { marketAngles, matchAverages, matchReading, radarValues, rankMarkets, summarizeWindow, type GameRow, type GameStats, type WindowSummary } from '@/lib/match-stats'
 import type { FixtureRow } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { collectCornersForFixture } from '@/server/corners.functions'
 import { getMatchStats } from '@/server/stats.functions'
 import { FormBadges } from './form-badges'
 import { ChartLegend, GroupedBars, type BarSeries } from './grouped-bars'
+import { MarketAngleCard } from './market-angles'
 import { RadarChart } from './radar-chart'
 import { StatCompare, StatTile } from './stat-compare'
 
 const HOME = 'var(--series-home)'
 const AWAY = 'var(--series-away)'
 
-type Fixture = Pick<FixtureRow, 'id' | 'home_team_name' | 'home_team_logo' | 'away_team_name' | 'away_team_logo'>
+type Fixture = Pick<FixtureRow, 'id' | 'league_name' | 'home_team_name' | 'home_team_logo' | 'away_team_name' | 'away_team_logo'>
 
 /** Seção "Estatísticas" da página da partida: carrega, trata acesso e estados. */
 export function MatchStatsSection({ fixture, authReady, userKey, redirect }: { fixture: Fixture; authReady: boolean; userKey: string; redirect: string }) {
@@ -76,7 +77,7 @@ export function MatchStatsSection({ fixture, authReady, userKey, redirect }: { f
       ) : stats.data?.status === 'locked' ? (
         <LockedStats fixture={fixture} form={stats.data.form} needsLogin={stats.data.needsLogin} redirect={redirect} />
       ) : stats.data?.status === 'ok' ? (
-        <MatchStatsPanel fixture={fixture} home={stats.data.home} away={stats.data.away} />
+        <MatchStatsPanel fixture={fixture} home={stats.data.home} away={stats.data.away} h2hHome={stats.data.h2hHome ?? []} h2hAway={stats.data.h2hAway ?? []} />
       ) : null}
     </section>
   )
@@ -163,7 +164,16 @@ function seriesOf(home: GameRow[], away: GameRow[], n: number, names: [string, s
 
 const stat = (k: keyof GameStats) => (r: GameRow) => r.stats?.[k] ?? null
 
-export function MatchStatsPanel({ fixture, home, away }: { fixture: Fixture; home: GameRow[]; away: GameRow[] }) {
+export function MatchStatsPanel({ fixture, home, away, h2hHome, h2hAway }: { fixture: Fixture; home: GameRow[]; away: GameRow[]; h2hHome: GameRow[]; h2hAway: GameRow[] }) {
+  const [tab, setTab] = React.useState('resumo')
+  const markets = React.useMemo(
+    () =>
+      rankMarkets([
+        ...marketAngles({ team: fixture.home_team_name, side: 'home', games: home, venue: 'casa', league: fixture.league_name, opponent: fixture.away_team_name, h2h: h2hHome }),
+        ...marketAngles({ team: fixture.away_team_name, side: 'away', games: away, venue: 'fora', league: fixture.league_name, opponent: fixture.home_team_name, h2h: h2hAway }),
+      ]),
+    [fixture, home, away, h2hHome, h2hAway],
+  )
   const available = Math.max(home.length, away.length)
   const options = [5, 10, ...(available > 10 ? [available] : [])].filter((o, i, a) => a.indexOf(o) === i)
   const [n, setN] = React.useState(available >= 10 ? 10 : 5)
@@ -203,9 +213,10 @@ export function MatchStatsPanel({ fixture, home, away }: { fixture: Fixture; hom
         <ChartLegend items={legend} />
       </div>
 
-      <Tabs defaultValue="resumo">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="justify-start">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
+          <TabsTrigger value="mercados">Mercados</TabsTrigger>
           <TabsTrigger value="gols">Gols</TabsTrigger>
           <TabsTrigger value="finalizacoes">Finalizações</TabsTrigger>
           <TabsTrigger value="escanteios">Escanteios</TabsTrigger>
@@ -236,6 +247,18 @@ export function MatchStatsPanel({ fixture, home, away }: { fixture: Fixture; hom
               <StatCompare label="Posse de bola" home={h?.possession ?? null} away={a?.possession ?? null} digits={0} suffix="%" />
             </Panel>
           </div>
+          {markets.length > 0 && (
+            <Panel title="Mercados mais consistentes" subtitle="Em quantos jogos cada mercado aconteceu, olhando cada time por vários ângulos. Frequência histórica, não é previsão.">
+              <div className="grid gap-3 md:grid-cols-2">
+                {markets.slice(0, 2).map((m) => (
+                  <MarketAngleCard key={m.key} m={m} logo={<TeamCrest name={m.team} logo={m.side === 'home' ? fixture.home_team_logo : fixture.away_team_logo} size={30} />} />
+                ))}
+              </div>
+              <Button variant="outline" size="sm" className="mt-4" onClick={() => setTab('mercados')}>
+                Ver todos os mercados ({markets.length})
+              </Button>
+            </Panel>
+          )}
           <Panel title="Gols marcados por jogo" subtitle={`Últimos ${n} jogos de cada equipe, do mais antigo ao mais recente.`}>
             <GroupedBars series={seriesOf(home, away, n, names, (r) => r.gf)} unit="gol(s)" ariaLabel="Gols marcados por jogo de cada equipe" />
           </Panel>
@@ -267,6 +290,10 @@ export function MatchStatsPanel({ fixture, home, away }: { fixture: Fixture; hom
               <p className="mt-4 text-[11px] text-muted-foreground">Texto automático gerado só com os números acima. Não é recomendação nem garantia de resultado.</p>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="mercados" className="space-y-4">
+          <MarketsTab markets={markets} fixture={fixture} />
         </TabsContent>
 
         <TabsContent value="gols" className="space-y-4">
@@ -328,6 +355,56 @@ export function MatchStatsPanel({ fixture, home, away }: { fixture: Fixture; hom
       </div>
       <p className="text-xs text-muted-foreground">
         Fonte: API-Football. Médias por jogo calculadas só com as partidas que têm o dado; quando a fonte não traz um número, ele aparece como “—”.
+      </p>
+    </div>
+  )
+}
+
+function MarketsTab({ markets, fixture }: { markets: ReturnType<typeof rankMarkets>; fixture: Fixture }) {
+  const [side, setSide] = React.useState<'all' | 'home' | 'away'>('all')
+  const [limit, setLimit] = React.useState(8)
+  const list = markets.filter((m) => side === 'all' || m.side === side)
+  const chips = [
+    { v: 'all' as const, label: 'Todos' },
+    { v: 'home' as const, label: fixture.home_team_name },
+    { v: 'away' as const, label: fixture.away_team_name },
+  ]
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-soft">
+      <h3 className="font-display text-lg font-bold text-brand-dark">Mercados por ângulo</h3>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        Cada mercado testado nos últimos 10 e 5 jogos, no mesmo mando deste jogo, na mesma competição e no confronto direto. Os mais consistentes aparecem primeiro.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Filtrar por time">
+        {chips.map((c) => (
+          <button
+            key={c.v}
+            type="button"
+            role="radio"
+            aria-checked={side === c.v}
+            onClick={() => setSide(c.v)}
+            className={cn('rounded-full border px-3.5 py-1.5 text-sm font-semibold transition', side === c.v ? 'border-primary bg-primary text-white' : 'hover:border-primary/50')}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+      {list.length ? (
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {list.slice(0, limit).map((m) => (
+            <MarketAngleCard key={m.key} m={m} logo={<TeamCrest name={m.team} logo={m.side === 'home' ? fixture.home_team_logo : fixture.away_team_logo} size={30} />} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-muted-foreground">Amostra insuficiente (menos de 3 jogos) para testar os mercados.</p>
+      )}
+      {list.length > limit && (
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => setLimit((l) => l + 8)}>
+          Ver mais mercados
+        </Button>
+      )}
+      <p className="mt-4 text-[11px] text-muted-foreground">
+        Percentual em verde: 70% ou mais dos jogos · âmbar: 50–69% · cinza: abaixo de 50%. Escanteios e cartões contam só os jogos com estatística detalhada. Frequência passada não garante resultado.
       </p>
     </div>
   )

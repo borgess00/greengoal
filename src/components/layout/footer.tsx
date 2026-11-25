@@ -6,7 +6,7 @@ import { SITE } from '@/lib/site'
 
 export function Footer() {
   return (
-    <footer className="mt-20 bg-brand-dark text-emerald-50">
+    <footer className="mt-20 bg-ink text-emerald-50">
       <PartnerBanner />
       <div className="container-page grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-4">
