@@ -87,6 +87,18 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 - **Radar de escanteios** (`/escanteios`, assinantes): todas as equipes da grade com amostra, sem limite de 3, com exportação de relatório vertical em PNG (verde e branco).
 - **Dados extras da análise**: classificação, desfalques informados, odds com probabilidade implícita sem margem, destaques por mercado com risco (baixo / médio / médio-alto), motivos a favor e contra, alertas.
 
+## Estatísticas dinâmicas, busca e favoritos
+
+- **Painel “Estatísticas”** na página da partida (`src/components/stats/match-stats-panel.tsx`): recorte dos últimos 5, 10 ou todos os jogos coletados, abas Resumo / Gols / Finalizações / Escanteios / Cartões, comparativo mandante x visitante, gráfico de barras por jogo com tooltip, radar comparativo (escalas fixas em `RADAR_SCALES`), leitura automática da partida (sem IA) e lista dos últimos jogos. Cálculos puros e testados em `src/lib/match-stats.ts`.
+- **Acesso**: a forma recente (V/E/D) é pública; os números detalhados só vão para assinantes ativos e administradores (checagem no servidor em `getMatchStats`).
+- **Início**: “Destaque do dia” com forma, números por jogo e radar de uma partida prioritária de hoje.
+- **Cartões de jogos** mostram a forma recente (colunas `fixtures.form_home/form_away`, gravadas na coleta).
+- **Busca** (`/busca`) por time ou campeonato nos jogos carregados de 7 dias para trás e para a frente.
+- **Favoritos** (`/favoritos`): estrela ao lado do escudo na página da partida; tabela `favorite_teams` com RLS (cada pessoa só vê e altera os seus).
+- **Barra inferior** no celular (Início, Jogos, Favoritos, Bilhetes, Conta).
+- **Automação**: coleta as estatísticas de até `auto_max_stats` partidas por execução (sem IA; funciona mesmo sem a chave do Claude). Para “últimos 10” ter finalizações/escanteios em todos os jogos, suba “Jogos com estatística detalhada” para 10 em Admin › Coleta (mais consultas à API-Football).
+- Banco: rode `supabase/atualizacao-estatisticas.sql` (quem já instalou). Sem ela o site continua funcionando, mas sem forma nos cartões e sem favoritos.
+
 ## Pagamentos (Asaas)
 
 - Com `ASAAS_API_KEY` configurada, a contratação é real: o site cria o cliente (CPF/CNPJ) e a assinatura no Asaas (ciclo semanal, mensal ou anual) e leva a pessoa à fatura do Asaas (Pix ou cartão). Sem a chave, continua o checkout demonstrativo.

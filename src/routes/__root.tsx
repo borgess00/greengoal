@@ -5,6 +5,7 @@ import type { QueryClient } from '@tanstack/react-query'
 import appCss from '@/styles.css?url'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { BottomNav } from '@/components/layout/bottom-nav'
 import { AgeGate } from '@/components/layout/age-gate'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/hooks/use-auth'
@@ -53,6 +54,7 @@ function RootLayout() {
         <Outlet />
       </main>
       <Footer />
+      <BottomNav />
       <AgeGate />
       <Toaster />
     </AuthProvider>

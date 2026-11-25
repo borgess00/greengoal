@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { CalendarDays, Crown, Layers, LogOut, Menu, Settings, Shield, Ticket, UserRound, Info } from 'lucide-react'
+import { CalendarDays, Crown, Layers, LogOut, Menu, Search, Settings, Shield, Star, Ticket, UserRound, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Logo } from './logo'
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/jogos', label: 'Jogos do dia', icon: CalendarDays },
   { to: '/bilhetes-prontos', label: 'Bilhetes prontos', icon: Layers },
   { to: '/bilhete', label: 'Conferir bilhete', icon: Ticket },
+  { to: '/favoritos', label: 'Favoritos', icon: Star },
   { to: '/planos', label: 'Planos', icon: Crown },
   { to: '/sobre', label: 'Sobre', icon: Info },
 ] as const
@@ -57,6 +58,16 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" size="icon" aria-label="Buscar jogos" title="Buscar jogos">
+            <Link to="/busca">
+              <Search className="size-5" />
+            </Link>
+          </Button>
+          <Button asChild variant="ghost" size="icon" className="hidden lg:inline-flex" aria-label="Favoritos" title="Favoritos">
+            <Link to="/favoritos">
+              <Star className="size-5" />
+            </Link>
+          </Button>
           <div className="hidden items-center gap-2 sm:flex">
             {user ? (
               <Button asChild variant="ghost" size="sm" className="h-9">

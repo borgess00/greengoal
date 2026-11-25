@@ -17,7 +17,7 @@ import {
 } from '@/lib/ready-tickets'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 import { aiConfigured, generateAiAnalysis, structuredCall } from './ai.server'
-import { collectFixtureBundle, footballConfigured, readCollectOptions, syncGrade } from './football.server'
+import { collectCornerData, collectFixtureBundle, footballConfigured, readCollectOptions, syncGrade } from './football.server'
 
 const STALE_GENERATING_MS = 10 * 60_000
 
@@ -252,13 +252,14 @@ export interface AutomationReport {
   failed: number
   limitReached: boolean
   tickets?: string
+  stats?: number
   log: string[]
 }
 
 /**
- * Rotina automática: busca os jogos do dia, gera as análises que faltam
- * (prioridade por campeonato e horário, até o limite configurado) e, em
- * seguida, os bilhetes prontos.
+ * Rotina automática: busca os jogos do dia, coleta as estatísticas dos jogos
+ * recentes (sem IA), gera as análises que faltam (prioridade por campeonato e
+ * horário, até o limite configurado) e, em seguida, os bilhetes prontos.
  */
 export async function runAutomation(opts: { date?: string; log?: (msg: string) => void } = {}): Promise<AutomationReport> {
   const date = opts.date ?? currentGradeDate()
@@ -274,8 +275,8 @@ export async function runAutomation(opts: { date?: string; log?: (msg: string) =
     say(out.skipped)
     return out
   }
-  if (!footballConfigured() || !aiConfigured()) {
-    out.skipped = 'Chaves da API-Football e/ou da IA ausentes.'
+  if (!footballConfigured()) {
+    out.skipped = 'Chave da API-Football ausente.'
     say(out.skipped)
     return out
   }
@@ -292,18 +293,54 @@ export async function runAutomation(opts: { date?: string; log?: (msg: string) =
     await logRun('sync', 'error', { message, auto: true }, null, undefined, date)
   }
 
-  // 2) Análises que faltam, das partidas que ainda não começaram.
-  const max = Math.max(0, await readNumberSetting('auto_max_analyses', 4))
   const [{ data: fixtures }, { data: leagues }, { data: analyses }] = await Promise.all([
     db.from('fixtures').select('id, league_id, kickoff_at, status_short, home_team_name, away_team_name').eq('grade_date', date),
     db.from('leagues').select('id, priority'),
     db.from('analyses').select('fixture_id, status'),
   ])
   const prio = new Map((leagues ?? []).map((l) => [l.id as number, l.priority as number]))
+  const byPriority = (a: { league_id: unknown; kickoff_at: unknown }, b: { league_id: unknown; kickoff_at: unknown }) =>
+    (prio.get(a.league_id as number) ?? 999) - (prio.get(b.league_id as number) ?? 999) || Date.parse(a.kickoff_at as string) - Date.parse(b.kickoff_at as string)
+
+  // 2) Estatísticas dos jogos recentes (sem IA) para o painel das partidas.
+  const maxStats = Math.max(0, await readNumberSetting('auto_max_stats', 6))
+  if (maxStats > 0) {
+    const ids = (fixtures ?? []).map((f) => f.id as number)
+    const { data: existing } = ids.length ? await db.from('fixture_data').select('fixture_id').in('fixture_id', ids) : { data: [] }
+    const have = new Set((existing ?? []).map((r) => r.fixture_id as number))
+    const statsQueue = (fixtures ?? [])
+      .filter((f) => !have.has(f.id as number) && !isFinished(f.status_short as string) && Date.parse(f.kickoff_at as string) > Date.now() - 3 * 3600_000)
+      .sort(byPriority)
+      .slice(0, maxStats)
+    say(`Estatísticas a coletar nesta execução: ${statsQueue.length} (limite configurado: ${maxStats})`)
+    const opts = await readCollectOptions()
+    out.stats = 0
+    for (const f of statsQueue) {
+      try {
+        const r = await collectCornerData(f.id as number, opts)
+        if (!r.skipped) out.stats++
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        say(`✗ estatísticas de ${f.home_team_name} x ${f.away_team_name}: ${message}`)
+        if (/request limit|requests? (per day|limit)|reached the limit/i.test(message)) break
+      }
+    }
+    say(`Estatísticas coletadas: ${out.stats}`)
+    await logRun('collect', 'ok', { stats: out.stats, auto: true }, null, undefined, date)
+  }
+
+  if (!aiConfigured()) {
+    say('Chave da IA ausente: análises e bilhetes prontos ficam para quando ela for configurada.')
+    await logRun('auto', 'ok', { generated: 0, stats: out.stats ?? 0, ai: false }, null, undefined, date)
+    return out
+  }
+
+  // 3) Análises que faltam, das partidas que ainda não começaram.
+  const max = Math.max(0, await readNumberSetting('auto_max_analyses', 4))
   const done = new Set((analyses ?? []).filter((a) => a.status === 'done').map((a) => a.fixture_id as number))
   const queue = (fixtures ?? [])
     .filter((f) => !done.has(f.id as number) && Date.parse(f.kickoff_at as string) > Date.now() + 10 * 60_000)
-    .sort((a, b) => (prio.get(a.league_id as number) ?? 999) - (prio.get(b.league_id as number) ?? 999) || Date.parse(a.kickoff_at as string) - Date.parse(b.kickoff_at as string))
+    .sort(byPriority)
     .slice(0, max)
   say(`Análises a gerar nesta execução: ${queue.length} (limite configurado: ${max})`)
 
@@ -325,13 +362,13 @@ export async function runAutomation(opts: { date?: string; log?: (msg: string) =
     }
   }
 
-  // 3) Bilhetes prontos do dia.
+  // 4) Bilhetes prontos do dia.
   if (!out.limitReached) {
     const t = await generateReadyTicketsCore(date, null)
     out.tickets = t.ok ? `${t.tickets} bilhete(s) gerado(s)` : `sem bilhetes: ${t.error}`
     say(`Bilhetes: ${out.tickets}`)
   }
 
-  await logRun('auto', out.failed && !out.generated ? 'error' : 'ok', { generated: out.generated, failed: out.failed, limitReached: out.limitReached, tickets: out.tickets }, null, undefined, date)
+  await logRun('auto', out.failed && !out.generated ? 'error' : 'ok', { generated: out.generated, failed: out.failed, limitReached: out.limitReached, tickets: out.tickets, stats: out.stats ?? 0 }, null, undefined, date)
   return out
 }

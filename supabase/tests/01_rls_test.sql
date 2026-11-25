@@ -68,6 +68,18 @@ do $$ begin
 exception when insufficient_privilege then null; end $$;
 reset role;
 
+do $$ begin
+  update public.fixtures set form_home = 'VVEDX' where id = 1001;
+  raise exception 'forma inválida deveria ser recusada';
+exception when check_violation then null; end $$;
+update public.fixtures set form_home = 'VVEDV', form_away = '' where id = 1001;
+set local role anon;
+do $$ begin
+  perform count(*) from public.favorite_teams;
+  raise exception 'anon não deveria ler favoritos';
+exception when insufficient_privilege then null; end $$;
+reset role;
+
 -- ---------- visitante autenticado sem assinatura ----------
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000000c', true);
@@ -77,6 +89,15 @@ do $$ begin
   assert (select count(*) from public.tickets) = 1, 'deve ver só o próprio bilhete';
   assert (select count(*) from public.profiles) = 1, 'deve ver só o próprio perfil';
   assert (select count(*) from public.ai_usage) = 0, 'não admin não vê uso de IA';
+end $$;
+-- favoritos: insere e lê só os próprios; não grava em nome de outra pessoa
+insert into public.favorite_teams (user_id, team_id, team_name) values ('00000000-0000-0000-0000-00000000000c', 121, 'Palmeiras');
+do $$ begin
+  insert into public.favorite_teams (user_id, team_id, team_name) values ('00000000-0000-0000-0000-00000000000b', 127, 'Flamengo');
+  raise exception 'não deveria favoritar em nome de outra pessoa';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  assert (select count(*) from public.favorite_teams) = 1, 'deve ver só os próprios favoritos';
 end $$;
 do $$ begin
   perform count(*) from public.fixture_data;

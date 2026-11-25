@@ -18,3 +18,7 @@ Cobrem: aviso 18+, 404, papel admin automático, busca dos jogos do dia (dia do 
 geração de análise (poda de seções e de promessas), bloqueio para visitante e não assinante
 (inclusive leitura direta via RLS), assinatura demo, bilhete, cancelamento, vencimento,
 teto diário de IA no lote, radar de escanteios e layout no celular.
+
+`e2e/estatisticas.mjs` (rodar depois do `run.mjs`) cobre: painel de estatísticas (bloqueio para visitante, recorte 5/10,
+abas, tooltip, radar, leitura), forma nos cartões, destaque do início, busca, favoritos, barra inferior no celular e
+automação coletando estatísticas sem a chave da IA.

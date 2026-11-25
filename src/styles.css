@@ -32,6 +32,13 @@
   --brand-dark: #064e3b;
   --brand-light: #4ade80;
   --warning: #b45309;
+
+  /* Séries dos gráficos (mandante x visitante) — par validado para daltonismo. */
+  --series-home: #047857;
+  --series-away: #84cc16;
+  --result-win: #15803d;
+  --result-draw: #66756d;
+  --result-loss: #dc2626;
 }
 
 @theme inline {
@@ -61,6 +68,11 @@
   --color-brand-dark: var(--brand-dark);
   --color-brand-light: var(--brand-light);
   --color-warning: var(--warning);
+  --color-series-home: var(--series-home);
+  --color-series-away: var(--series-away);
+  --color-result-win: var(--result-win);
+  --color-result-draw: var(--result-draw);
+  --color-result-loss: var(--result-loss);
 
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 3px);

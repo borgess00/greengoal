@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { currentGradeDate, isValidDate } from '@/lib/grade'
 import type { FixtureRow, LeagueRow } from '@/lib/types'
 import { supabasePublic } from '@/integrations/supabase/supabase.server'
+import { withForms } from './forms.server'
 
 const FIXTURE_COLUMNS =
   'id, grade_date, kickoff_at, local_time, league_id, league_name, league_country, league_logo, league_round, season, home_team_id, home_team_name, home_team_logo, away_team_id, away_team_name, away_team_logo, venue, status_short, status_long, elapsed, goals_home, goals_away, ft_home, ft_away, ht_home, ht_away, referee, has_analysis, updated_at'
@@ -30,7 +31,7 @@ export const getGradeFixtures = createServerFn({ method: 'GET' })
     return {
       date,
       configured: true,
-      fixtures: (fx.data ?? []) as FixtureRow[],
+      fixtures: await withForms((fx.data ?? []) as FixtureRow[]),
       leagues: (lg.data ?? []) as Pick<LeagueRow, 'id' | 'name' | 'country' | 'priority'>[],
     }
   })
@@ -51,7 +52,7 @@ export const getHomeFixtures = createServerFn({ method: 'GET' }).handler(async (
   const now = Date.now()
   const upcoming = rows.filter((r) => Date.parse(r.kickoff_at) > now - 2 * 3600_000)
   const pick = (upcoming.length ? upcoming : rows).slice(0, 3)
-  return { date, fixtures: pick }
+  return { date, fixtures: await withForms(pick) }
 })
 
 export const getFixture = createServerFn({ method: 'GET' })

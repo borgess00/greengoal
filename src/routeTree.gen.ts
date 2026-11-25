@@ -14,7 +14,9 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BilheteRouteImport } from './routes/bilhete'
 import { Route as BilhetesProntosRouteImport } from './routes/bilhetes-prontos'
+import { Route as BuscaRouteImport } from './routes/busca'
 import { Route as EscanteiosRouteImport } from './routes/escanteios'
+import { Route as FavoritosRouteImport } from './routes/favoritos'
 import { Route as JogoResponsavelRouteImport } from './routes/jogo-responsavel'
 import { Route as JogosRouteImport } from './routes/jogos'
 import { Route as PerfilRouteImport } from './routes/perfil'
@@ -52,9 +54,19 @@ const BilhetesProntosRoute = BilhetesProntosRouteImport.update({
   path: '/bilhetes-prontos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BuscaRoute = BuscaRouteImport.update({
+  id: '/busca',
+  path: '/busca',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EscanteiosRoute = EscanteiosRouteImport.update({
   id: '/escanteios',
   path: '/escanteios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritosRoute = FavoritosRouteImport.update({
+  id: '/favoritos',
+  path: '/favoritos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JogoResponsavelRoute = JogoResponsavelRouteImport.update({
@@ -119,7 +131,9 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/bilhete': typeof BilheteRoute
   '/bilhetes-prontos': typeof BilhetesProntosRoute
+  '/busca': typeof BuscaRoute
   '/escanteios': typeof EscanteiosRoute
+  '/favoritos': typeof FavoritosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
   '/perfil': typeof PerfilRoute
@@ -138,7 +152,9 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/bilhete': typeof BilheteRoute
   '/bilhetes-prontos': typeof BilhetesProntosRoute
+  '/busca': typeof BuscaRoute
   '/escanteios': typeof EscanteiosRoute
+  '/favoritos': typeof FavoritosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
   '/perfil': typeof PerfilRoute
@@ -158,7 +174,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/bilhete': typeof BilheteRoute
   '/bilhetes-prontos': typeof BilhetesProntosRoute
+  '/busca': typeof BuscaRoute
   '/escanteios': typeof EscanteiosRoute
+  '/favoritos': typeof FavoritosRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
   '/perfil': typeof PerfilRoute
@@ -179,7 +197,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bilhete'
     | '/bilhetes-prontos'
+    | '/busca'
     | '/escanteios'
+    | '/favoritos'
     | '/jogo-responsavel'
     | '/jogos'
     | '/perfil'
@@ -198,7 +218,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bilhete'
     | '/bilhetes-prontos'
+    | '/busca'
     | '/escanteios'
+    | '/favoritos'
     | '/jogo-responsavel'
     | '/jogos'
     | '/perfil'
@@ -217,7 +239,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bilhete'
     | '/bilhetes-prontos'
+    | '/busca'
     | '/escanteios'
+    | '/favoritos'
     | '/jogo-responsavel'
     | '/jogos'
     | '/perfil'
@@ -237,7 +261,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BilheteRoute: typeof BilheteRoute
   BilhetesProntosRoute: typeof BilhetesProntosRoute
+  BuscaRoute: typeof BuscaRoute
   EscanteiosRoute: typeof EscanteiosRoute
+  FavoritosRoute: typeof FavoritosRoute
   JogoResponsavelRoute: typeof JogoResponsavelRoute
   JogosRoute: typeof JogosRoute
   PerfilRoute: typeof PerfilRoute
@@ -288,11 +314,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BilhetesProntosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/busca': {
+      id: '/busca'
+      path: '/busca'
+      fullPath: '/busca'
+      preLoaderRoute: typeof BuscaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/escanteios': {
       id: '/escanteios'
       path: '/escanteios'
       fullPath: '/escanteios'
       preLoaderRoute: typeof EscanteiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favoritos': {
+      id: '/favoritos'
+      path: '/favoritos'
+      fullPath: '/favoritos'
+      preLoaderRoute: typeof FavoritosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jogo-responsavel': {
@@ -381,7 +421,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BilheteRoute: BilheteRoute,
   BilhetesProntosRoute: BilhetesProntosRoute,
+  BuscaRoute: BuscaRoute,
   EscanteiosRoute: EscanteiosRoute,
+  FavoritosRoute: FavoritosRoute,
   JogoResponsavelRoute: JogoResponsavelRoute,
   JogosRoute: JogosRoute,
   PerfilRoute: PerfilRoute,

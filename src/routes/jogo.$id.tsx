@@ -10,6 +10,8 @@ import { TeamCrest } from '@/components/common/team-crest'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { FavoriteStar } from '@/components/stats/favorite-star'
+import { MatchStatsSection } from '@/components/stats/match-stats-panel'
 import { useAuth } from '@/hooks/use-auth'
 import { isFinished, isLive, statusLabel } from '@/lib/fixture-status'
 import { errorMessage } from '@/lib/format'
@@ -90,7 +92,7 @@ function JogoPage() {
             {fixture.league_round && <span className="text-emerald-100/80">· {fixture.league_round}</span>}
           </div>
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-8">
-            <TeamBlock name={fixture.home_team_name} logo={fixture.home_team_logo} label="Mandante" />
+            <TeamBlock id={fixture.home_team_id} name={fixture.home_team_name} logo={fixture.home_team_logo} label="Mandante" />
             <div className="text-center">
               {showScore ? (
                 <p className="font-display text-4xl font-bold tabular sm:text-6xl">
@@ -104,7 +106,7 @@ function JogoPage() {
                 {live && fixture.elapsed ? ` ${fixture.elapsed}'` : ''}
               </Badge>
             </div>
-            <TeamBlock name={fixture.away_team_name} logo={fixture.away_team_logo} label="Visitante" />
+            <TeamBlock id={fixture.away_team_id} name={fixture.away_team_name} logo={fixture.away_team_logo} label="Visitante" />
           </div>
           <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-emerald-50/85">
             <span className="flex items-center gap-1.5">
@@ -128,6 +130,8 @@ function JogoPage() {
       </section>
 
       <div className="container-page py-8">
+        <MatchStatsSection fixture={fixture} authReady={!authLoading} userKey={user?.id ?? 'anon'} redirect={location.href} />
+
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-2xl font-bold text-brand-dark">Análise da partida</h2>
           {access.data?.access === 'granted' && access.data.isAdmin && (
@@ -173,11 +177,14 @@ function JogoPage() {
   )
 }
 
-function TeamBlock({ name, logo, label }: { name: string; logo: string | null; label: string }) {
+function TeamBlock({ id, name, logo, label }: { id: number; name: string; logo: string | null; label: string }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
-      <div className="grid size-16 place-items-center rounded-2xl bg-white p-2 shadow-lift sm:size-20">
-        <TeamCrest name={name} logo={logo} size={56} />
+      <div className="relative">
+        <div className="grid size-16 place-items-center rounded-2xl bg-white p-2 shadow-lift sm:size-20">
+          <TeamCrest name={name} logo={logo} size={56} />
+        </div>
+        <FavoriteStar teamId={id} teamName={name} teamLogo={logo} className="absolute -top-2 -right-3 size-8 bg-brand-dark/70" />
       </div>
       <p className="font-display text-base leading-tight font-bold sm:text-xl">{name}</p>
       <p className="text-[11px] tracking-wider text-emerald-100/70 uppercase">{label}</p>

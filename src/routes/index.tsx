@@ -6,11 +6,14 @@ import { FixtureCard, FixtureCardSkeleton } from '@/components/fixtures/fixture-
 import { EmptyState } from '@/components/common/empty-state'
 import { RiskNotice } from '@/components/common/risk-notice'
 import { getHomeFixtures } from '@/server/fixtures.functions'
+import { getFeaturedMatch } from '@/server/stats.functions'
+import { FeaturedMatchCard } from '@/components/stats/featured-match'
 import { formatGradeDate } from '@/lib/grade'
 import { seo } from '@/lib/seo'
 import { useMe } from '@/hooks/use-auth'
 
 const homeFixturesQuery = queryOptions({ queryKey: ['home-fixtures'], queryFn: () => getHomeFixtures(), staleTime: 60_000 })
+const featuredQuery = queryOptions({ queryKey: ['featured-match'], queryFn: () => getFeaturedMatch(), staleTime: 5 * 60_000 })
 
 export const Route = createFileRoute('/')({
   head: () =>
@@ -19,7 +22,7 @@ export const Route = createFileRoute('/')({
       description: 'Estatísticas, forma recente, confrontos diretos e análises de futebol em português. Informação para decidir melhor, sem promessa de resultado. 18+.',
       path: '/',
     }),
-  loader: ({ context }) => context.queryClient.prefetchQuery(homeFixturesQuery),
+  loader: ({ context }) => Promise.all([context.queryClient.prefetchQuery(homeFixturesQuery), context.queryClient.prefetchQuery(featuredQuery)]),
   component: HomePage,
 })
 
@@ -32,6 +35,7 @@ const BENEFITS = [
 
 function HomePage() {
   const { data, isLoading } = useQuery(homeFixturesQuery)
+  const featured = useQuery(featuredQuery)
   const { me } = useMe()
   const subscribed = !!me?.hasActiveSubscription
 
@@ -108,6 +112,12 @@ function HomePage() {
           )}
         </div>
       </section>
+
+      {featured.data && (
+        <section className="container-page mt-8">
+          <FeaturedMatchCard data={featured.data} />
+        </section>
+      )}
 
       <section className="container-page mt-20">
         <div className="max-w-2xl">

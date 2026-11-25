@@ -22,6 +22,7 @@ import type {
 } from '@/lib/api-football-types'
 import { FINISHED } from '@/lib/fixture-status'
 import { gradeDateFor, spParts, TIMEZONE } from '@/lib/grade'
+import { formString, teamGames } from '@/lib/match-stats'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 
 // API_FOOTBALL_BASE_URL permite apontar para um servidor de testes local.
@@ -326,6 +327,19 @@ async function matchStatistics(fixtureId: number, tracker: CallTracker) {
   })
 }
 
+/**
+ * Grava a forma recente (V/E/D) nas colunas da partida. Ignora falhas: a
+ * coluna pode não existir se a atualização do banco ainda não foi aplicada.
+ */
+export async function saveForms(fixtureId: number, homeId: number, awayId: number, last: { home?: ApiFixture[]; away?: ApiFixture[] }) {
+  const form_home = formString(teamGames(homeId, last.home, undefined), 10)
+  const form_away = formString(teamGames(awayId, last.away, undefined), 10)
+  await supabaseAdmin().from('fixtures').update({ form_home, form_away }).eq('id', fixtureId).then(
+    () => undefined,
+    () => undefined,
+  )
+}
+
 /** Coleta todos os dados de apoio de uma partida. Falhas parciais viram ausências. */
 export async function collectFixtureBundle(fixtureId: number, opts: CollectOptions) {
   const tracker = newTracker()
@@ -439,6 +453,7 @@ export async function collectFixtureBundle(fixtureId: number, opts: CollectOptio
     .from('fixture_data')
     .upsert({ fixture_id: fixtureId, payload: bundle as never, sources, api_calls: tracker.calls, collected_at: new Date().toISOString() })
 
+  await saveForms(fixtureId, homeId, awayId, bundle.lastFixtures)
   return { bundle, sources, tracker }
 }
 
@@ -501,5 +516,6 @@ export async function collectCornerData(fixtureId: number, opts: CollectOptions)
     api_calls: tracker.calls,
     collected_at: new Date().toISOString(),
   })
+  await saveForms(fixtureId, fx.home_team_id as number, fx.away_team_id as number, { home, away })
   return { skipped: false, tracker }
 }

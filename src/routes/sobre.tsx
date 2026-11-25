@@ -42,6 +42,10 @@ const FAQ = [
     a: 'Os percentuais de vitória, empate e derrota vêm do modelo estatístico da própria API-Football. Quando há odds disponíveis, mostramos também a probabilidade implícita no mercado, sem a margem da casa. São estimativas, não certezas.',
   },
   {
+    q: 'De onde vêm os números do painel “Estatísticas” da partida?',
+    a: 'Dos últimos jogos de cada equipe registrados pela API-Football: placar, finalizações, escanteios, cartões e posse. Você escolhe o recorte (últimos 5, 10 ou todos os disponíveis). Quando a fonte não traz a estatística detalhada de um jogo, a média usa só os jogos que têm o dado e o painel informa quantos foram. A “Leitura da partida” é um texto automático feito só com esses números — não é recomendação.',
+  },
+  {
     q: 'O radar de escanteios mostra escanteios nos primeiros 10 minutos?',
     a: 'Não. A fonte atual informa o total de escanteios por partida, sem o minuto de cada um. O radar mostra médias gerais a favor e cedidas, com o tamanho da amostra, e deixa essa limitação explícita.',
   },

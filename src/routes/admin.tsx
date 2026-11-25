@@ -460,6 +460,7 @@ function SettingsPanel() {
           collect_player_pages: form.collect_player_pages,
           auto_enabled: !!form.auto_enabled,
           auto_max_analyses: form.auto_max_analyses,
+          auto_max_stats: form.auto_max_stats,
         },
       }),
     onSuccess: () => {
@@ -479,8 +480,8 @@ function SettingsPanel() {
       <CardHeader>
         <CardTitle className="text-base">Automação diária</CardTitle>
         <CardDescription>
-          Roda sozinha no GitHub Actions às 08h05 e às 14h05 (Brasília): busca os jogos do dia, gera as análises das partidas prioritárias que ainda não começaram e monta os
-          bilhetes prontos. Também pode ser disparada em GitHub › Actions › “Automação diária” › Run workflow.
+          Roda sozinha no GitHub Actions às 08h05 e às 14h05 (Brasília): busca os jogos do dia, coleta as estatísticas dos jogos recentes (painel “Estatísticas” das
+          partidas, sem IA), gera as análises das partidas prioritárias que ainda não começaram e monta os bilhetes prontos (estas duas etapas só com a chave da IA). Também pode ser disparada em GitHub › Actions › “Automação diária” › Run workflow.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-5 md:grid-cols-3">
@@ -499,6 +500,18 @@ function SettingsPanel() {
             onChange={(e) => setForm((s) => ({ ...s, auto_max_analyses: Math.max(0, Math.min(50, Number(e.target.value))) }))}
           />
           <p className="text-xs text-muted-foreground">Cada análise usa cerca de 20–25 consultas da API-Football. No plano gratuito (100/dia), use no máximo 3.</p>
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="auto_max_stats">Partidas com estatísticas por execução</Label>
+          <Input
+            id="auto_max_stats"
+            type="number"
+            min={0}
+            max={100}
+            value={form.auto_max_stats ?? ''}
+            onChange={(e) => setForm((s) => ({ ...s, auto_max_stats: Math.max(0, Math.min(100, Number(e.target.value))) }))}
+          />
+          <p className="text-xs text-muted-foreground">Sem IA. Cada partida usa até ~12 consultas (jogos já vistos ficam em cache). No plano gratuito, mantenha entre 4 e 6.</p>
         </div>
       </CardContent>
     </Card>

@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ChevronRight, Clock, Sparkles } from 'lucide-react'
 import { TeamCrest } from '@/components/common/team-crest'
 import { Badge } from '@/components/ui/badge'
+import { FormBadges } from '@/components/stats/form-badges'
 import { isFinished, isLive, statusLabel } from '@/lib/fixture-status'
 import type { FixtureRow } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -39,9 +40,9 @@ export function FixtureCard({ fixture, className }: { fixture: FixtureRow; class
         )}
       </div>
       <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2">
-        <TeamLine name={fixture.home_team_name} logo={fixture.home_team_logo} />
+        <TeamLine name={fixture.home_team_name} logo={fixture.home_team_logo} form={fixture.form_home} />
         <span className="font-display text-lg font-bold tabular text-brand-dark">{showScore ? fixture.goals_home : ''}</span>
-        <TeamLine name={fixture.away_team_name} logo={fixture.away_team_logo} />
+        <TeamLine name={fixture.away_team_name} logo={fixture.away_team_logo} form={fixture.form_away} />
         <span className="font-display text-lg font-bold tabular text-brand-dark">{showScore ? fixture.goals_away : ''}</span>
       </div>
       <div className="flex items-center justify-between border-t pt-3 text-xs">
@@ -60,11 +61,12 @@ export function FixtureCard({ fixture, className }: { fixture: FixtureRow; class
   )
 }
 
-function TeamLine({ name, logo }: { name: string; logo: string | null }) {
+function TeamLine({ name, logo, form }: { name: string; logo: string | null; form?: string | null }) {
   return (
     <span className="flex min-w-0 items-center gap-2.5">
       <TeamCrest name={name} logo={logo} size={26} />
       <span className="truncate font-semibold">{name}</span>
+      {form && <FormBadges form={form.slice(0, 5)} size="sm" className="ml-auto hidden shrink-0 gap-0.5 min-[380px]:inline-flex" />}
     </span>
   )
 }

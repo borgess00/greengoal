@@ -32,6 +32,9 @@ export interface FixtureRow {
   referee: string | null
   has_analysis: boolean
   updated_at: string
+  /** Forma recente V/E/D (mais recente primeiro), quando já coletada. */
+  form_home?: string | null
+  form_away?: string | null
 }
 
 export interface LeagueRow {
