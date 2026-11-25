@@ -86,7 +86,7 @@ function HomePage() {
                 </Button>
               )}
             </div>
-            <p className="mt-5 text-sm text-white/55">Comece grátis. Plano completo a partir de R$ 13,90 por semana.</p>
+            <p className="mt-5 text-sm text-white/55">Comece grátis. Plano completo a partir de R$ 10,90 por semana.</p>
           </div>
           <figure className="relative mx-auto w-full max-w-[540px]">
             <div className="absolute inset-[12%] rounded-full bg-brand-light/30 blur-3xl" aria-hidden />

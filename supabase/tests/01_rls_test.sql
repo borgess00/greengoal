@@ -16,7 +16,7 @@ insert into public.daily_tickets (grade_date, status, content) values ('2026-10-
 insert into public.fixture_data (fixture_id, payload) values (1001, '{"raw":true}');
 
 do $$ begin
-  assert (select price_cents from public.plans where id = 'weekly') = 1390, 'semanal deveria custar R$ 13,90';
+  assert (select price_cents from public.plans where id = 'weekly') = 1090, 'semanal deveria custar R$ 10,90';
   assert (select price_cents from public.plans where id = 'monthly') = 4190, 'mensal deveria custar R$ 41,90';
   assert (select price_cents from public.plans where id = 'annual') = 39990, 'anual deveria continuar R$ 399,90';
   assert not exists (select 1 from information_schema.columns where table_name = 'fixtures' and column_name = 'period'), 'coluna period deveria ter saído';

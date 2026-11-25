@@ -810,3 +810,7 @@ create trigger favorite_teams_limit before insert on public.favorite_teams
 -- (sem IA; só consultas à API-Football, a maioria em cache).
 insert into public.app_settings (key, value) values ('auto_max_stats', '6'::jsonb)
 on conflict (key) do nothing;
+
+-- >>> 20261127120000_preco_semanal.sql
+-- Plano semanal passa a custar R$ 10,90 (mensal e anual sem mudança).
+update public.plans set price_cents = 1090 where id = 'weekly';

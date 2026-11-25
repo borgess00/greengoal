@@ -47,7 +47,7 @@ export const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'Quais planos existem e qual a diferença?',
-    a: 'Semanal (R$ 13,90), mensal (R$ 41,90) e anual (R$ 399,90, equivalente a R$ 33,33/mês). Todos liberam os mesmos recursos.',
+    a: 'Semanal (R$ 10,90), mensal (R$ 41,90) e anual (R$ 399,90, equivalente a R$ 33,33/mês). Todos liberam os mesmos recursos.',
   },
   {
     q: 'Como funciona o pagamento?',
