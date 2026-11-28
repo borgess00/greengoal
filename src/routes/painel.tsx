@@ -1,10 +1,13 @@
 import * as React from 'react'
+import { LogoImg } from '@/components/common/logo-img'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, BarChart3, Crown, Lock, Plus, TicketCheck, Trophy } from 'lucide-react'
 import { RiskNotice } from '@/components/common/risk-notice'
+import { AnimatedNumber } from '@/components/common/animated-number'
 import { TeamCrest } from '@/components/common/team-crest'
 import { FormDashes } from '@/components/stats/form-dashes'
+import { HotBadge } from '@/components/stats/hot-badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth, useMe } from '@/hooks/use-auth'
@@ -87,8 +90,8 @@ function PainelPage() {
             ) : picks.length ? (
               <>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {(showAll ? picks : picks.slice(0, 6)).map((p) => (
-                    <RingPickCard key={p.key} p={p} pro={d.pro} />
+                  {(showAll ? picks : picks.slice(0, 6)).map((p, i) => (
+                    <RingPickCard key={p.key} p={p} pro={d.pro} delay={i * 60} />
                   ))}
                 </div>
                 {picks.length > 6 && !showAll && (
@@ -169,15 +172,18 @@ function Odds({ g, size = 'md' }: { g: BigGame; size?: 'sm' | 'md' }) {
 function HeroGame({ g }: { g: BigGame }) {
   const live = isLive(g.status_short)
   return (
-    <Link to="/jogo/$id" params={{ id: String(g.id) }} className="hero-pitch relative block overflow-hidden rounded-2xl p-5 text-white sm:p-6">
+    <Link to="/jogo/$id" params={{ id: String(g.id) }} className="hero-pitch enter-up relative block overflow-hidden rounded-2xl p-5 text-white transition hover:brightness-110 sm:p-6">
       <div className="pitch-lines absolute inset-0 opacity-40" aria-hidden />
       <div className="relative">
         <div className="flex items-center justify-between gap-3 text-xs text-white/70">
           <span className="flex items-center gap-1.5">
-            {g.league_logo && <img src={g.league_logo} alt="" width={16} height={16} className="size-4 rounded bg-white object-contain p-0.5" />}
+            {g.league_logo && <LogoImg src={g.league_logo} alt="" width={16} height={16} className="size-4 rounded bg-white object-contain p-0.5" />}
             {g.league_name}
           </span>
-          <span className="rounded-full bg-white/10 px-2.5 py-1 font-semibold">{live ? `Ao vivo ${g.elapsed ?? ''}'` : 'Jogo do dia'}</span>
+          <span className="flex items-center gap-2">
+            <HotBadge count={g.hot_markets} tone="onDark" />
+            <span className="rounded-full bg-white/10 px-2.5 py-1 font-semibold">{live ? `Ao vivo ${g.elapsed ?? ''}'` : 'Jogo do dia'}</span>
+          </span>
         </div>
         <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           {(['home', 'away'] as const).map((side, i) => (
@@ -210,7 +216,10 @@ function GameRow({ g }: { g: BigGame }) {
   return (
     <li>
       <Link to="/jogo/$id" params={{ id: String(g.id) }} className="flex items-center gap-3 px-4 py-3 transition hover:bg-muted/60">
-        <span className={cn('w-12 shrink-0 text-sm font-bold tabular', live ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>{live ? `${g.elapsed ?? ''}'` : g.local_time}</span>
+        <span className={cn('w-12 shrink-0 text-sm font-bold tabular', live ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>
+          {live ? `${g.elapsed ?? ''}'` : g.local_time}
+          <HotBadge count={g.hot_markets} compact className="mt-1 flex" />
+        </span>
         <span className="min-w-0 flex-1 space-y-1 text-sm">
           {(['home', 'away'] as const).map((side) => (
             <span key={side} className="flex items-center gap-2">
@@ -236,7 +245,20 @@ function Ring({ value }: { value: number }) {
   return (
     <svg viewBox="0 0 64 64" className="size-16 shrink-0" role="img" aria-label={`${value}% no recorte principal`}>
       <circle cx="32" cy="32" r={r} fill="none" stroke="var(--muted)" strokeWidth="6" />
-      <circle cx="32" cy="32" r={r} fill="none" stroke="var(--primary)" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${(value / 100) * c} ${c}`} transform="rotate(-90 32 32)" />
+      <circle
+        cx="32"
+        cy="32"
+        r={r}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - value / 100)}
+        transform="rotate(-90 32 32)"
+        className="ring-anim"
+        style={{ '--ring-c': c } as React.CSSProperties}
+      />
       <text x="32" y="32" dy="0.35em" textAnchor="middle" className="fill-brand-dark font-display text-[15px] font-bold">
         {value}%
       </text>
@@ -244,9 +266,15 @@ function Ring({ value }: { value: number }) {
   )
 }
 
-function RingPickCard({ p, pro }: { p: PickCard; pro: boolean }) {
+function RingPickCard({ p, pro, delay = 0 }: { p: PickCard; pro: boolean; delay?: number }) {
   return (
-    <Link to="/jogo/$id" params={{ id: String(p.fixtureId) }} hash="estatisticas" className="flex gap-4 rounded-2xl border bg-card p-4 shadow-soft transition hover:border-primary/50">
+    <Link
+      to="/jogo/$id"
+      params={{ id: String(p.fixtureId) }}
+      hash="estatisticas"
+      className="enter-up flex gap-4 rounded-2xl border bg-card p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/50"
+      style={{ animationDelay: `${delay}ms` }}
+    >
       <Ring value={p.rate} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs text-muted-foreground">
@@ -291,7 +319,9 @@ function SummaryCard({ d }: { d: DashboardData | undefined }) {
   const row = (label: string, value: React.ReactNode, tone?: 'win' | 'loss') => (
     <div className="flex items-center justify-between py-1.5 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className={cn('font-display font-bold tabular', tone === 'win' ? 'text-primary' : tone === 'loss' ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>{value}</span>
+      <span className={cn('font-display font-bold tabular', tone === 'win' ? 'text-primary' : tone === 'loss' ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>
+        <AnimatedNumber value={value} />
+      </span>
     </div>
   )
   return (

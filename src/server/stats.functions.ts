@@ -5,7 +5,7 @@ import { z } from 'zod'
 import type { ApiFixture, ApiFixtureTeamStatistics } from '@/lib/api-football-types'
 import { isFinished } from '@/lib/fixture-status'
 import { addDays, currentGradeDate } from '@/lib/grade'
-import { formString, marketAngles, rankMarkets, summarizeWindow, teamGames, type GameRow, type MarketAngles, type WindowSummary } from '@/lib/match-stats'
+import { fixtureMarkets, formString, hotMarketCount, marketAngles, rankMarkets, summarizeWindow, teamGames, type GameRow, type MarketAngles, type WindowSummary } from '@/lib/match-stats'
 import type { FixtureRow } from '@/lib/types'
 import { optionalAuth } from './auth-middleware'
 import { userHasActiveSubscription, userIsAdmin } from './access.server'
@@ -80,6 +80,21 @@ export const getMatchStats = createServerFn({ method: 'GET' })
         () => undefined,
         () => undefined,
       )
+    const { data: names } = await db.from('fixtures').select('home_team_name, away_team_name, league_name').eq('id', data.id).maybeSingle()
+    if (names) {
+      const h2hRows = recent.h2h ?? []
+      const hot = hotMarketCount(
+        fixtureMarkets({
+          home: { name: names.home_team_name as string, games: home, h2h: teamGames(fx.home_team_id as number, h2hRows, recent.matchStats ?? undefined) },
+          away: { name: names.away_team_name as string, games: away, h2h: teamGames(fx.away_team_id as number, h2hRows, recent.matchStats ?? undefined) },
+          league: names.league_name as string,
+        }),
+      )
+      await db.from('fixtures').update({ hot_markets: hot }).eq('id', data.id).then(
+        () => undefined,
+        () => undefined,
+      )
+    }
     if (!sub && !admin) return { status: 'locked', needsLogin: !userId, form: { home: formString(home), away: formString(away) } }
     const h2h = recent.h2h ?? []
     return {

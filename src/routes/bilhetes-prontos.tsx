@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/common/page-header'
 import { RiskNotice } from '@/components/common/risk-notice'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { ShareTicketButton } from '@/components/slips/share-ticket-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/hooks/use-auth'
 import { errorMessage, formatDateTime, formatNumber } from '@/lib/format'
@@ -20,7 +21,9 @@ import { cn } from '@/lib/utils'
 import { generateReadyTickets, getReadyTickets } from '@/server/ready-tickets.functions'
 
 export const Route = createFileRoute('/bilhetes-prontos')({
-  validateSearch: z.object({ data: z.string().refine(isValidDate).optional().catch(undefined) }),
+  validateSearch: z.object({
+    data: z.string().refine(isValidDate).optional().catch(undefined),
+  }),
   head: () =>
     seo({
       title: 'Bilhetes prontos do dia',
@@ -31,10 +34,22 @@ export const Route = createFileRoute('/bilhetes-prontos')({
 })
 
 const TIER_STYLE: Record<OddTier, { badge: string; bar: string }> = {
-  baixa: { badge: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300', bar: 'bg-green-500' },
-  media: { badge: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300', bar: 'bg-amber-500' },
-  alta: { badge: 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300', bar: 'bg-orange-500' },
-  altissima: { badge: 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300', bar: 'bg-rose-500' },
+  baixa: {
+    badge: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300',
+    bar: 'bg-green-500',
+  },
+  media: {
+    badge: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+    bar: 'bg-amber-500',
+  },
+  alta: {
+    badge: 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300',
+    bar: 'bg-orange-500',
+  },
+  altissima: {
+    badge: 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-300',
+    bar: 'bg-rose-500',
+  },
 }
 
 function BilhetesProntosPage() {
@@ -68,7 +83,11 @@ function BilhetesProntosPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Assinantes" title="Bilhetes prontos" description="Montados a partir das análises do dia em quatro faixas: odd baixa, média, alta e altíssima. Quanto maior a odd, menor a chance. Informação estatística, não garantia de resultado.">
+      <PageHeader
+        eyebrow="Assinantes"
+        title="Bilhetes prontos"
+        description="Montados a partir das análises do dia em quatro faixas: odd baixa, média, alta e altíssima. Quanto maior a odd, menor a chance. Informação estatística, não garantia de resultado."
+      >
         <div className="flex items-center gap-2">
           <Button size="icon" variant="white" aria-label="Dia anterior" onClick={() => setDate(addDays(date, -1))}>
             <ChevronLeft className="size-5" />
@@ -177,10 +196,14 @@ function BilhetesProntosPage() {
           />
         )}
 
+        <p className="mt-8 text-sm">
+          <Link to="/historico" className="font-semibold text-primary hover:underline">
+            Ver o histórico de acertos dos bilhetes prontos →
+          </Link>
+        </p>
         <p className="mt-8 rounded-xl bg-muted/70 p-4 text-sm text-muted-foreground">
-          <strong className="text-foreground">Como ler:</strong> a odd total multiplica as odds informadas pela fonte no momento da análise e muda até o início dos jogos. A
-          “chance combinada” multiplica as probabilidades estimadas, supondo jogos independentes — é uma estimativa, não uma certeza. Bilhetes informativos: não há garantia de
-          lucro.
+          <strong className="text-foreground">Como ler:</strong> a odd total multiplica as odds informadas pela fonte no momento da análise e muda até o início dos jogos. A “chance combinada”
+          multiplica as probabilidades estimadas, supondo jogos independentes — é uma estimativa, não uma certeza. Bilhetes informativos: não há garantia de lucro.
         </p>
         <RiskNotice className="mt-6" />
       </div>
@@ -188,7 +211,11 @@ function BilhetesProntosPage() {
   )
 }
 
-const fmtOdd = (n: number) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const fmtOdd = (n: number) =>
+  n.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
 
 function TicketCard({ ticket }: { ticket: ReadyTicket }) {
   const tier = ticketTier(ticket)
@@ -200,7 +227,15 @@ function TicketCard({ ticket }: { ticket: ReadyTicket }) {
   const save = useMutation({
     mutationFn: () =>
       createSlip({
-        data: { title: ticket.titulo, source: 'ready', selections: trackable.map((s) => ({ fixtureId: s.fixture_id, market: s.codigo, odd: s.odd })) },
+        data: {
+          title: ticket.titulo,
+          source: 'ready',
+          selections: trackable.map((s) => ({
+            fixtureId: s.fixture_id,
+            market: s.codigo,
+            odd: s.odd,
+          })),
+        },
       }),
     onSuccess: () => {
       const left = ticket.selecoes.length - trackable.length
@@ -257,13 +292,31 @@ function TicketCard({ ticket }: { ticket: ReadyTicket }) {
       </ol>
       <footer className="flex flex-wrap items-center justify-between gap-2 border-t bg-muted/40 px-6 py-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-2">
-          <Layers className="size-3.5" /> {ticket.selecoes.length} seleç{ticket.selecoes.length === 1 ? 'ão' : 'ões'} · informativo, sem garantia de lucro
+          <Layers className="size-3.5" /> {ticket.selecoes.length} seleç
+          {ticket.selecoes.length === 1 ? 'ão' : 'ões'} · informativo, sem garantia de lucro
         </span>
-        {user && trackable.length > 0 && !started && (
-          <Button size="sm" variant="outline" onClick={() => save.mutate()} disabled={save.isPending || save.isSuccess}>
-            <TicketCheck /> {save.isSuccess ? 'Salvo' : 'Salvar em Meus bilhetes'}
-          </Button>
-        )}
+        <span className="flex flex-wrap items-center gap-1">
+          <ShareTicketButton
+            filename={`bilhete-${tier}.png`}
+            ticket={{
+              title: ticket.titulo,
+              badge: TIER_LABEL[tier],
+              subtitle: ticket.resumo,
+              odd: ticket.odd_total,
+              selections: ticket.selecoes.map((s) => ({
+                market: s.mercado,
+                game: s.jogo,
+                meta: s.horario,
+                odd: s.odd,
+              })),
+            }}
+          />
+          {user && trackable.length > 0 && !started && (
+            <Button size="sm" variant="outline" onClick={() => save.mutate()} disabled={save.isPending || save.isSuccess}>
+              <TicketCheck /> {save.isSuccess ? 'Salvo' : 'Salvar em Meus bilhetes'}
+            </Button>
+          )}
+        </span>
       </footer>
     </article>
   )

@@ -6,9 +6,21 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { EmptyState } from '@/components/common/empty-state'
 import { RiskNotice } from '@/components/common/risk-notice'
+import { AnimatedNumber } from '@/components/common/animated-number'
 import { TeamCrest } from '@/components/common/team-crest'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ShareTicketButton } from '@/components/slips/share-ticket-button'
 import { Input } from '@/components/ui/input'
 import { NativeSelect } from '@/components/ui/select-native'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,22 +36,44 @@ import { deleteSlip, listMySlips, type SlipView } from '@/server/slips.functions
 
 const TABS = ['abertos', 'ganhos', 'perdidos', 'anulados', 'desempenho'] as const
 type Tab = (typeof TABS)[number]
-const TAB_STATUS: Record<Exclude<Tab, 'desempenho'>, SlipStatus> = { abertos: 'open', ganhos: 'won', perdidos: 'lost', anulados: 'void' }
+const TAB_STATUS: Record<Exclude<Tab, 'desempenho'>, SlipStatus> = {
+  abertos: 'open',
+  ganhos: 'won',
+  perdidos: 'lost',
+  anulados: 'void',
+}
 
 export const Route = createFileRoute('/meus-bilhetes')({
   validateSearch: z.object({ aba: z.enum(TABS).optional().catch(undefined) }),
-  head: () => seo({ title: 'Meus bilhetes', description: 'Monte seus bilhetes no GreenGoal e acompanhe sozinho se bateram, com taxa de acerto e resultado em unidades.', path: '/meus-bilhetes' }),
+  head: () =>
+    seo({
+      title: 'Meus bilhetes',
+      description: 'Monte seus bilhetes no GreenGoal e acompanhe sozinho se bateram, com taxa de acerto e resultado em unidades.',
+      path: '/meus-bilhetes',
+    }),
   component: MeusBilhetesPage,
 })
 
-const fmtOdd = (n: number | null) => (n == null ? '—' : n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }))
+const fmtOdd = (n: number | null) =>
+  n == null
+    ? '—'
+    : n.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
 
 function MeusBilhetesPage() {
   const { aba = 'abertos' } = Route.useSearch()
   const navigate = useNavigate({ from: '/meus-bilhetes' })
   const { user, loading } = useAuth()
   const location = useLocation()
-  const q = useQuery({ queryKey: ['my-slips', user?.id], queryFn: () => listMySlips(), enabled: !!user, staleTime: 60_000, refetchInterval: 120_000 })
+  const q = useQuery({
+    queryKey: ['my-slips', user?.id],
+    queryFn: () => listMySlips(),
+    enabled: !!user,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+  })
   const [text, setText] = React.useState('')
   const [league, setLeague] = React.useState('')
 
@@ -52,14 +86,15 @@ function MeusBilhetesPage() {
   }
   const leagues = [...new Set(slips.flatMap((s) => s.selections.map((x) => x.fixture?.league_name).filter(Boolean) as string[]))].sort()
   const term = text.trim().toLowerCase()
-  const visible = aba === 'desempenho'
-    ? []
-    : slips.filter(
-        (s) =>
-          s.status === TAB_STATUS[aba] &&
-          (!league || s.selections.some((x) => x.fixture?.league_name === league)) &&
-          (!term || (s.title ?? '').toLowerCase().includes(term) || s.selections.some((x) => `${x.fixture?.home_team_name} ${x.fixture?.away_team_name} ${x.label}`.toLowerCase().includes(term))),
-      )
+  const visible =
+    aba === 'desempenho'
+      ? []
+      : slips.filter(
+          (s) =>
+            s.status === TAB_STATUS[aba] &&
+            (!league || s.selections.some((x) => x.fixture?.league_name === league)) &&
+            (!term || (s.title ?? '').toLowerCase().includes(term) || s.selections.some((x) => `${x.fixture?.home_team_name} ${x.fixture?.away_team_name} ${x.label}`.toLowerCase().includes(term))),
+        )
 
   const tabBtn = (t: Tab, label: string, n?: number) => (
     <button
@@ -67,7 +102,12 @@ function MeusBilhetesPage() {
       type="button"
       role="tab"
       aria-selected={aba === t}
-      onClick={() => navigate({ search: { aba: t === 'abertos' ? undefined : t }, replace: true })}
+      onClick={() =>
+        navigate({
+          search: { aba: t === 'abertos' ? undefined : t },
+          replace: true,
+        })
+      }
       className={cn('shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition', aba === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-brand-dark')}
     >
       {label}
@@ -149,7 +189,9 @@ function MeusBilhetesPage() {
                     <TicketCheck className="size-8 text-primary" />
                     <p className="font-display text-lg font-bold text-brand-dark">{aba === 'abertos' ? 'Seu próximo bilhete começa aqui' : 'Nada por aqui ainda'}</p>
                     <p className="max-w-md text-sm text-muted-foreground">
-                      {aba === 'abertos' ? 'Abra uma partida, toque em “+ Bilhete” nos mercados e salve. O resultado aparece sozinho quando os jogos acabarem.' : 'Os bilhetes aparecem nesta aba depois de conferidos.'}
+                      {aba === 'abertos'
+                        ? 'Abra uma partida, toque em “+ Bilhete” nos mercados e salve. O resultado aparece sozinho quando os jogos acabarem.'
+                        : 'Os bilhetes aparecem nesta aba depois de conferidos.'}
                     </p>
                     {aba === 'abertos' && (
                       <Button asChild>
@@ -172,16 +214,44 @@ function MeusBilhetesPage() {
 
 const STATUS_STYLE: Record<SlipStatus, { label: string; cls: string }> = {
   open: { label: 'Aberto', cls: 'bg-muted text-muted-foreground' },
-  won: { label: 'Ganho', cls: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300' },
-  lost: { label: 'Perdido', cls: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300' },
-  void: { label: 'Anulado', cls: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300' },
+  won: {
+    label: 'Ganho',
+    cls: 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300',
+  },
+  lost: {
+    label: 'Perdido',
+    cls: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
+  },
+  void: {
+    label: 'Anulado',
+    cls: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+  },
 }
 
 function SelIcon({ s }: { s: SelectionStatus }) {
-  if (s === 'won') return <span className="grid size-6 place-items-center rounded-full bg-result-win text-white" title="Acertou"><Check className="size-3.5" /></span>
-  if (s === 'lost') return <span className="grid size-6 place-items-center rounded-full bg-result-loss text-white" title="Errou"><X className="size-3.5" /></span>
-  if (s === 'void') return <span className="grid size-6 place-items-center rounded-full bg-amber-500 text-white" title="Anulada (jogo adiado ou cancelado)"><Ban className="size-3.5" /></span>
-  return <span className="grid size-6 place-items-center rounded-full border-2 text-muted-foreground" title="Em aberto"><Circle className="size-2 fill-current" /></span>
+  if (s === 'won')
+    return (
+      <span className="grid size-6 place-items-center rounded-full bg-result-win text-white" title="Acertou">
+        <Check className="size-3.5" />
+      </span>
+    )
+  if (s === 'lost')
+    return (
+      <span className="grid size-6 place-items-center rounded-full bg-result-loss text-white" title="Errou">
+        <X className="size-3.5" />
+      </span>
+    )
+  if (s === 'void')
+    return (
+      <span className="grid size-6 place-items-center rounded-full bg-amber-500 text-white" title="Anulada (jogo adiado ou cancelado)">
+        <Ban className="size-3.5" />
+      </span>
+    )
+  return (
+    <span className="grid size-6 place-items-center rounded-full border-2 text-muted-foreground" title="Em aberto">
+      <Circle className="size-2 fill-current" />
+    </span>
+  )
 }
 
 function SlipCard({ s }: { s: SlipView }) {
@@ -199,7 +269,7 @@ function SlipCard({ s }: { s: SlipView }) {
   const result =
     s.status === 'won' && s.odd != null ? `+${(s.stake * (s.odd - 1)).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}u` : s.status === 'lost' ? `-${s.stake.toLocaleString('pt-BR')}u` : null
   return (
-    <article className="rounded-2xl border bg-card p-4 shadow-soft sm:p-5">
+    <article className="enter-up rounded-2xl border bg-card p-4 shadow-soft sm:p-5">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-display text-lg font-bold text-brand-dark">{s.title || `Bilhete com ${s.selections.length} ${s.selections.length === 1 ? 'seleção' : 'seleções'}`}</p>
@@ -232,7 +302,17 @@ function SlipCard({ s }: { s: SlipView }) {
               <div className="text-right text-xs">
                 <p className="font-display text-sm font-bold tabular">{fmtOdd(x.odd)}</p>
                 <p className={cn('tabular', live ? 'font-semibold text-red-600 dark:text-red-400' : 'text-muted-foreground')}>
-                  {f?.score ? `${live ? 'ao vivo ' : ''}${f.score}` : f ? new Date(f.kickoff_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}
+                  {f?.score
+                    ? `${live ? 'ao vivo ' : ''}${f.score}`
+                    : f
+                      ? new Date(f.kickoff_at).toLocaleString('pt-BR', {
+                          timeZone: 'America/Sao_Paulo',
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : ''}
                 </p>
               </div>
             </li>
@@ -244,23 +324,41 @@ function SlipCard({ s }: { s: SlipView }) {
           Odd total <strong className="font-display text-base text-brand-dark tabular">{fmtOdd(s.odd)}</strong> · {s.stake.toLocaleString('pt-BR')} unidade(s)
           {result && <strong className={cn('ml-2 tabular', s.status === 'won' ? 'text-primary' : 'text-red-600 dark:text-red-400')}>{result}</strong>}
         </span>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="sm" disabled={del.isPending}>
-              <Trash2 /> Apagar
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Apagar este bilhete?</AlertDialogTitle>
-              <AlertDialogDescription>Ele sai de Meus bilhetes e do seu desempenho. Não dá para desfazer.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Manter</AlertDialogCancel>
-              <AlertDialogAction onClick={() => del.mutate()}>Apagar</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <span className="flex items-center gap-1">
+          <ShareTicketButton
+            filename={`bilhete-${s.id.slice(0, 8)}.png`}
+            ticket={{
+              title: s.title || `Bilhete com ${s.selections.length} ${s.selections.length === 1 ? 'seleção' : 'seleções'}`,
+              subtitle: `Montado no GreenGoal · ${formatDateTime(s.createdAt)}`,
+              status: s.status,
+              odd: s.odd,
+              selections: s.selections.map((x) => ({
+                market: x.label,
+                game: x.fixture ? `${x.fixture.home_team_name} x ${x.fixture.away_team_name}` : 'Partida',
+                score: x.fixture?.score ?? null,
+                odd: x.odd,
+                status: x.status,
+              })),
+            }}
+          />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" disabled={del.isPending}>
+                <Trash2 /> Apagar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Apagar este bilhete?</AlertDialogTitle>
+                <AlertDialogDescription>Ele sai de Meus bilhetes e do seu desempenho. Não dá para desfazer.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Manter</AlertDialogCancel>
+                <AlertDialogAction onClick={() => del.mutate()}>Apagar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </span>
       </footer>
     </article>
   )
@@ -275,7 +373,13 @@ function SummaryStrip({ slips }: { slips: SlipView[] }) {
   const live = selections.filter((x) => isLive(x.fixture!.status_short)).length
   const startsToday = selections.filter((x) => spParts(x.fixture!.kickoff_at).date === today && !isLive(x.fixture!.status_short)).length
   const startsTomorrow = selections.filter((x) => spParts(x.fixture!.kickoff_at).date === tomorrow).length
-  const p = performance(slips.map((s) => ({ status: s.status, odd_total: s.odd, stake_units: s.stake })))
+  const p = performance(
+    slips.map((s) => ({
+      status: s.status,
+      odd_total: s.odd,
+      stake_units: s.stake,
+    })),
+  )
   const tiles: Array<[string, React.ReactNode, 'win' | 'loss' | undefined]> = [
     ['Abertos', open.length, undefined],
     ['Ganhos', p.won, 'win'],
@@ -290,7 +394,9 @@ function SummaryStrip({ slips }: { slips: SlipView[] }) {
         {tiles.map(([label, value, tone]) => (
           <div key={label} className="rounded-xl bg-muted/60 px-3 py-2.5">
             <p className="text-[11px] font-semibold text-muted-foreground">{label}</p>
-            <p className={cn('font-display text-xl font-bold tabular', tone === 'win' ? 'text-primary' : tone === 'loss' ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>{value}</p>
+            <p className={cn('font-display text-xl font-bold tabular', tone === 'win' ? 'text-primary' : tone === 'loss' ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>
+              <AnimatedNumber value={value} />
+            </p>
           </div>
         ))}
       </div>

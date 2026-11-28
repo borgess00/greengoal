@@ -121,3 +121,14 @@ describe('marketAngles', () => {
     expect(rankMarkets(list)[0].floor).toBeGreaterThanOrEqual(rankMarkets(list)[1].floor)
   })
 })
+
+describe('jogo quente', () => {
+  it('conta mercados com 80%+ em todos os ângulos e amostra mínima', async () => {
+    const { hotMarketCount, isHot } = await import('./match-stats')
+    const m = (floor: number, sample: number) => ({ key: 'k', market: 'm', team: 't', side: 'home' as const, angles: [], rate: floor, floor, sample })
+    expect(hotMarketCount([m(100, 10), m(80, 5), m(79, 10), m(100, 4)])).toBe(2)
+    expect(isHot(3)).toBe(true)
+    expect(isHot(2)).toBe(false)
+    expect(isHot(null)).toBe(false)
+  })
+})

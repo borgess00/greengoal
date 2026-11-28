@@ -1,11 +1,12 @@
 import * as React from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CalendarClock, CreditCard, LogOut, Receipt, ShieldCheck, UserRound } from 'lucide-react'
+import { Bell, CalendarClock, CreditCard, LogOut, Receipt, ShieldCheck, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { PasswordInput } from '@/components/auth/password-input'
 import { CheckoutDialog } from '@/components/billing/checkout-dialog'
+import { NotificationsTab } from '@/components/account/notifications-tab'
 import { EmptyState } from '@/components/common/empty-state'
 import { PageHeader } from '@/components/common/page-header'
 import {
@@ -40,7 +41,7 @@ import { getPlans } from '@/server/plans.functions'
 
 export const Route = createFileRoute('/perfil')({
   ssr: false,
-  validateSearch: z.object({ aba: z.enum(['dados', 'assinatura', 'pagamentos']).optional().catch(undefined) }),
+  validateSearch: z.object({ aba: z.enum(['dados', 'assinatura', 'pagamentos', 'notificacoes']).optional().catch(undefined) }),
   beforeLoad: ({ location }) => requireSession(location),
   head: () => seo({ title: 'Minha conta', description: 'Seus dados, sua assinatura e o histórico de pagamentos.', path: '/perfil', noindex: true }),
   component: PerfilPage,
@@ -86,6 +87,9 @@ function PerfilPage() {
             <TabsTrigger value="pagamentos">
               <Receipt /> Pagamentos
             </TabsTrigger>
+            <TabsTrigger value="notificacoes">
+              <Bell /> Notificações
+            </TabsTrigger>
           </TabsList>
           {loading || !me ? (
             <Skeleton className="h-64 w-full rounded-xl" />
@@ -99,6 +103,9 @@ function PerfilPage() {
               </TabsContent>
               <TabsContent value="pagamentos">
                 <PagamentosTab />
+              </TabsContent>
+              <TabsContent value="notificacoes">
+                <NotificationsTab />
               </TabsContent>
             </>
           )}

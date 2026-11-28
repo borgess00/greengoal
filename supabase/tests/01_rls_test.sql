@@ -68,6 +68,15 @@ do $$ begin
 exception when insufficient_privilege then null; end $$;
 reset role;
 
+insert into public.push_subscriptions (endpoint, user_id, p256dh, auth) values
+  ('https://push.example/c', '00000000-0000-0000-0000-00000000000c', 'k', 'a'),
+  ('https://push.example/b', '00000000-0000-0000-0000-00000000000b', 'k', 'a');
+insert into public.league_standings (league_id, season, standings) values (71, 2026, '[]');
+insert into public.notification_log (user_id, channel, kind, ref) values ('00000000-0000-0000-0000-00000000000c', 'email', 'boas_vindas', '1');
+do $$ begin
+  insert into public.notification_log (user_id, channel, kind, ref) values ('00000000-0000-0000-0000-00000000000c', 'email', 'boas_vindas', '1');
+  raise exception 'envio repetido deveria ser recusado';
+exception when unique_violation then null; end $$;
 insert into public.user_slips (user_id, selections) values
   ('00000000-0000-0000-0000-00000000000c', '[{"fixture_id":1001,"market":"casa"}]'),
   ('00000000-0000-0000-0000-00000000000b', '[{"fixture_id":1001,"market":"fora"}]');
@@ -107,6 +116,19 @@ do $$ begin
   assert (select count(*) from public.profiles) = 1, 'deve ver só o próprio perfil';
   assert (select count(*) from public.ai_usage) = 0, 'não admin não vê uso de IA';
 end $$;
+-- notificações: lê só as próprias; criar só pelo servidor; log invisível
+do $$ begin
+  assert (select count(*) from public.push_subscriptions) = 1, 'deve ver só a própria inscrição';
+  assert (select count(*) from public.league_standings) = 1, 'classificação é pública';
+end $$;
+do $$ begin
+  perform count(*) from public.notification_log;
+  raise exception 'usuário não deveria ler o registro de envios';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  insert into public.push_subscriptions (endpoint, user_id, p256dh, auth) values ('https://x/2', '00000000-0000-0000-0000-00000000000c', 'k', 'a');
+  raise exception 'usuário não deveria inserir inscrição direto';
+exception when insufficient_privilege then null; end $$;
 -- meus bilhetes: vê só os próprios; criar/alterar só pelo servidor
 do $$ begin
   assert (select count(*) from public.user_slips) = 1, 'deve ver só os próprios bilhetes';

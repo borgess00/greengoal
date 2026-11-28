@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { LogoImg } from '@/components/common/logo-img'
 import { ArrowRight, Clock, Crosshair, Goal, Square } from 'lucide-react'
 import { TeamCrest } from '@/components/common/team-crest'
 import { matchAverages, radarValues } from '@/lib/match-stats'
@@ -49,7 +50,7 @@ export function FeaturedMatchCard({ data }: { data: FeaturedMatch }) {
           <TeamCrest name={f.away_team_name} logo={f.away_team_logo} size={44} />
         </span>
         <span className="col-span-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-muted-foreground">
-          {f.league_logo && <img src={f.league_logo} alt="" width={14} height={14} className="size-3.5 object-contain" />}
+          {f.league_logo && <LogoImg src={f.league_logo} alt="" width={14} height={14} className="size-3.5 object-contain" />}
           {f.league_name}
         </span>
       </Link>

@@ -15,8 +15,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BilheteRouteImport } from './routes/bilhete'
 import { Route as BilhetesProntosRouteImport } from './routes/bilhetes-prontos'
 import { Route as BuscaRouteImport } from './routes/busca'
+import { Route as CompararRouteImport } from './routes/comparar'
 import { Route as EscanteiosRouteImport } from './routes/escanteios'
 import { Route as FavoritosRouteImport } from './routes/favoritos'
+import { Route as HistoricoRouteImport } from './routes/historico'
 import { Route as JogoResponsavelRouteImport } from './routes/jogo-responsavel'
 import { Route as JogosRouteImport } from './routes/jogos'
 import { Route as MeusBilhetesRouteImport } from './routes/meus-bilhetes'
@@ -28,7 +30,9 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as ApiSaudeRouteImport } from './routes/api/saude'
+import { Route as CampeonatoIdRouteImport } from './routes/campeonato.$id'
 import { Route as JogoIdRouteImport } from './routes/jogo.$id'
+import { Route as TimeIdRouteImport } from './routes/time.$id'
 import { Route as ApiAsaasWebhookRouteImport } from './routes/api/asaas/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -61,6 +65,11 @@ const BuscaRoute = BuscaRouteImport.update({
   path: '/busca',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompararRoute = CompararRouteImport.update({
+  id: '/comparar',
+  path: '/comparar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EscanteiosRoute = EscanteiosRouteImport.update({
   id: '/escanteios',
   path: '/escanteios',
@@ -69,6 +78,11 @@ const EscanteiosRoute = EscanteiosRouteImport.update({
 const FavoritosRoute = FavoritosRouteImport.update({
   id: '/favoritos',
   path: '/favoritos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
   getParentRoute: () => rootRouteImport,
 } as any)
 const JogoResponsavelRoute = JogoResponsavelRouteImport.update({
@@ -126,9 +140,19 @@ const ApiSaudeRoute = ApiSaudeRouteImport.update({
   path: '/api/saude',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampeonatoIdRoute = CampeonatoIdRouteImport.update({
+  id: '/campeonato/$id',
+  path: '/campeonato/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JogoIdRoute = JogoIdRouteImport.update({
   id: '/jogo/$id',
   path: '/jogo/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TimeIdRoute = TimeIdRouteImport.update({
+  id: '/time/$id',
+  path: '/time/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAsaasWebhookRoute = ApiAsaasWebhookRouteImport.update({
@@ -144,8 +168,10 @@ export interface FileRoutesByFullPath {
   '/bilhete': typeof BilheteRoute
   '/bilhetes-prontos': typeof BilhetesProntosRoute
   '/busca': typeof BuscaRoute
+  '/comparar': typeof CompararRoute
   '/escanteios': typeof EscanteiosRoute
   '/favoritos': typeof FavoritosRoute
+  '/historico': typeof HistoricoRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
   '/meus-bilhetes': typeof MeusBilhetesRoute
@@ -157,7 +183,9 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/api/saude': typeof ApiSaudeRoute
+  '/campeonato/$id': typeof CampeonatoIdRoute
   '/jogo/$id': typeof JogoIdRoute
+  '/time/$id': typeof TimeIdRoute
   '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -167,8 +195,10 @@ export interface FileRoutesByTo {
   '/bilhete': typeof BilheteRoute
   '/bilhetes-prontos': typeof BilhetesProntosRoute
   '/busca': typeof BuscaRoute
+  '/comparar': typeof CompararRoute
   '/escanteios': typeof EscanteiosRoute
   '/favoritos': typeof FavoritosRoute
+  '/historico': typeof HistoricoRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
   '/meus-bilhetes': typeof MeusBilhetesRoute
@@ -180,7 +210,9 @@ export interface FileRoutesByTo {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/api/saude': typeof ApiSaudeRoute
+  '/campeonato/$id': typeof CampeonatoIdRoute
   '/jogo/$id': typeof JogoIdRoute
+  '/time/$id': typeof TimeIdRoute
   '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
 export interface FileRoutesById {
@@ -191,8 +223,10 @@ export interface FileRoutesById {
   '/bilhete': typeof BilheteRoute
   '/bilhetes-prontos': typeof BilhetesProntosRoute
   '/busca': typeof BuscaRoute
+  '/comparar': typeof CompararRoute
   '/escanteios': typeof EscanteiosRoute
   '/favoritos': typeof FavoritosRoute
+  '/historico': typeof HistoricoRoute
   '/jogo-responsavel': typeof JogoResponsavelRoute
   '/jogos': typeof JogosRoute
   '/meus-bilhetes': typeof MeusBilhetesRoute
@@ -204,7 +238,9 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/api/saude': typeof ApiSaudeRoute
+  '/campeonato/$id': typeof CampeonatoIdRoute
   '/jogo/$id': typeof JogoIdRoute
+  '/time/$id': typeof TimeIdRoute
   '/api/asaas/webhook': typeof ApiAsaasWebhookRoute
 }
 export interface FileRouteTypes {
@@ -216,8 +252,10 @@ export interface FileRouteTypes {
     | '/bilhete'
     | '/bilhetes-prontos'
     | '/busca'
+    | '/comparar'
     | '/escanteios'
     | '/favoritos'
+    | '/historico'
     | '/jogo-responsavel'
     | '/jogos'
     | '/meus-bilhetes'
@@ -229,7 +267,9 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/api/saude'
+    | '/campeonato/$id'
     | '/jogo/$id'
+    | '/time/$id'
     | '/api/asaas/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -239,8 +279,10 @@ export interface FileRouteTypes {
     | '/bilhete'
     | '/bilhetes-prontos'
     | '/busca'
+    | '/comparar'
     | '/escanteios'
     | '/favoritos'
+    | '/historico'
     | '/jogo-responsavel'
     | '/jogos'
     | '/meus-bilhetes'
@@ -252,7 +294,9 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/api/saude'
+    | '/campeonato/$id'
     | '/jogo/$id'
+    | '/time/$id'
     | '/api/asaas/webhook'
   id:
     | '__root__'
@@ -262,8 +306,10 @@ export interface FileRouteTypes {
     | '/bilhete'
     | '/bilhetes-prontos'
     | '/busca'
+    | '/comparar'
     | '/escanteios'
     | '/favoritos'
+    | '/historico'
     | '/jogo-responsavel'
     | '/jogos'
     | '/meus-bilhetes'
@@ -275,7 +321,9 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/api/saude'
+    | '/campeonato/$id'
     | '/jogo/$id'
+    | '/time/$id'
     | '/api/asaas/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -286,8 +334,10 @@ export interface RootRouteChildren {
   BilheteRoute: typeof BilheteRoute
   BilhetesProntosRoute: typeof BilhetesProntosRoute
   BuscaRoute: typeof BuscaRoute
+  CompararRoute: typeof CompararRoute
   EscanteiosRoute: typeof EscanteiosRoute
   FavoritosRoute: typeof FavoritosRoute
+  HistoricoRoute: typeof HistoricoRoute
   JogoResponsavelRoute: typeof JogoResponsavelRoute
   JogosRoute: typeof JogosRoute
   MeusBilhetesRoute: typeof MeusBilhetesRoute
@@ -299,7 +349,9 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   ApiSaudeRoute: typeof ApiSaudeRoute
+  CampeonatoIdRoute: typeof CampeonatoIdRoute
   JogoIdRoute: typeof JogoIdRoute
+  TimeIdRoute: typeof TimeIdRoute
   ApiAsaasWebhookRoute: typeof ApiAsaasWebhookRoute
 }
 
@@ -347,6 +399,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuscaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comparar': {
+      id: '/comparar'
+      path: '/comparar'
+      fullPath: '/comparar'
+      preLoaderRoute: typeof CompararRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/escanteios': {
       id: '/escanteios'
       path: '/escanteios'
@@ -359,6 +418,13 @@ declare module '@tanstack/react-router' {
       path: '/favoritos'
       fullPath: '/favoritos'
       preLoaderRoute: typeof FavoritosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jogo-responsavel': {
@@ -438,11 +504,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSaudeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campeonato/$id': {
+      id: '/campeonato/$id'
+      path: '/campeonato/$id'
+      fullPath: '/campeonato/$id'
+      preLoaderRoute: typeof CampeonatoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/jogo/$id': {
       id: '/jogo/$id'
       path: '/jogo/$id'
       fullPath: '/jogo/$id'
       preLoaderRoute: typeof JogoIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/time/$id': {
+      id: '/time/$id'
+      path: '/time/$id'
+      fullPath: '/time/$id'
+      preLoaderRoute: typeof TimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/asaas/webhook': {
@@ -462,8 +542,10 @@ const rootRouteChildren: RootRouteChildren = {
   BilheteRoute: BilheteRoute,
   BilhetesProntosRoute: BilhetesProntosRoute,
   BuscaRoute: BuscaRoute,
+  CompararRoute: CompararRoute,
   EscanteiosRoute: EscanteiosRoute,
   FavoritosRoute: FavoritosRoute,
+  HistoricoRoute: HistoricoRoute,
   JogoResponsavelRoute: JogoResponsavelRoute,
   JogosRoute: JogosRoute,
   MeusBilhetesRoute: MeusBilhetesRoute,
@@ -475,7 +557,9 @@ const rootRouteChildren: RootRouteChildren = {
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   ApiSaudeRoute: ApiSaudeRoute,
+  CampeonatoIdRoute: CampeonatoIdRoute,
   JogoIdRoute: JogoIdRoute,
+  TimeIdRoute: TimeIdRoute,
   ApiAsaasWebhookRoute: ApiAsaasWebhookRoute,
 }
 export const routeTree = rootRouteImport

@@ -35,6 +35,8 @@ export interface FixtureRow {
   /** Forma recente V/E/D (mais recente primeiro), quando já coletada. */
   form_home?: string | null
   form_away?: string | null
+  /** Mercados que se repetiram em todos os ângulos (selo "jogo quente"). */
+  hot_markets?: number | null
 }
 
 export interface LeagueRow {

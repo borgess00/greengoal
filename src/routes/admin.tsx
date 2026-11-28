@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bot, Layers, CalendarDays, CircleCheck, CircleX, Database, DownloadCloud, Flag, Loader2, Play, Plus, RefreshCw, Settings, ShieldCheck, Square, Wand2 } from 'lucide-react'
+import { Bot, Layers, CalendarDays, CircleCheck, CircleX, Database, DownloadCloud, Flag, Loader2, Play, Plus, RefreshCw, Settings, ShieldCheck, Square, TrendingUp, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/common/page-header'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,7 @@ import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { BusinessPanel } from '@/components/admin/business-panel'
 import { errorMessage, formatDateTime } from '@/lib/format'
 import { addDays, currentGradeDate, formatGradeDate, isValidDate } from '@/lib/grade'
 import { requireAdminRole } from '@/lib/guards'
@@ -51,10 +52,13 @@ function AdminPage() {
   const [date, setDate] = React.useState(currentGradeDate())
   return (
     <>
-      <PageHeader eyebrow="Administração" title="Painel do GreenGoal" description="Sincronize a grade, gere análises e acompanhe o consumo diário de IA. As operações são iniciadas manualmente — não há agendamento automático." />
+      <PageHeader eyebrow="Administração" title="Painel do GreenGoal" description="Números do negócio, grade e análises, campeonatos e as configurações das automações." />
       <div className="container-page py-8">
-        <Tabs defaultValue="grade">
+        <Tabs defaultValue="negocio">
           <TabsList>
+            <TabsTrigger value="negocio">
+              <TrendingUp /> Negócio
+            </TabsTrigger>
             <TabsTrigger value="grade">
               <CalendarDays /> Grade e análises
             </TabsTrigger>
@@ -65,6 +69,9 @@ function AdminPage() {
               <Settings /> Coleta
             </TabsTrigger>
           </TabsList>
+          <TabsContent value="negocio">
+            <BusinessPanel />
+          </TabsContent>
           <TabsContent value="grade">
             <GradePanel date={date} setDate={setDate} />
           </TabsContent>

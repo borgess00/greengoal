@@ -6,6 +6,7 @@
 //   API_FOOTBALL_BASE_URL=http://localhost:4010/football
 //   OPENAI_BASE_URL=http://localhost:4010/openai/v1
 //   ANTHROPIC_BASE_URL=http://localhost:4010/anthropic
+import fs from 'node:fs'
 import http from 'node:http'
 
 const PORT = Number(process.env.MOCK_PORT ?? 4010)
@@ -15,12 +16,13 @@ const asaas = { n: 1, subs: {}, last: null }
 const TEAMS = {
   1: 'Palmeiras', 2: 'Flamengo', 3: 'Arsenal', 4: 'Chelsea', 5: 'Botafogo', 6: 'Grêmio', 7: 'Time Fora da Lista', 8: 'Outro Time',
 }
-const team = (id) => ({ id, name: TEAMS[id], logo: null })
+const MEDIA = `http://localhost:${PORT}/media`
+const team = (id) => ({ id, name: TEAMS[id], logo: `${MEDIA}/teams/${id}.png` })
 
 function fixtureFor(id, dateIso, leagueId, home, away, status = 'NS', score = null) {
   return {
     fixture: { id, referee: 'Wilton Pereira Sampaio', timezone: 'America/Sao_Paulo', date: dateIso, venue: { name: 'Estádio Teste' }, status: { short: status, long: status, elapsed: status === 'FT' ? 90 : null } },
-    league: { id: leagueId, name: leagueId === 39 ? 'Premier League' : leagueId === 71 ? 'Serie A' : 'Liga Fora', country: leagueId === 39 ? 'England' : 'Brazil', logo: null, season: 2026, round: 'Regular Season - 30' },
+    league: { id: leagueId, name: leagueId === 39 ? 'Premier League' : leagueId === 71 ? 'Serie A' : 'Liga Fora', country: leagueId === 39 ? 'England' : 'Brazil', logo: `${MEDIA}/leagues/${leagueId}.png`, season: 2026, round: 'Regular Season - 30' },
     teams: { home: team(home), away: team(away) },
     goals: { home: score?.[0] ?? null, away: score?.[1] ?? null },
     score: { halftime: { home: null, away: null }, fulltime: { home: score?.[0] ?? null, away: score?.[1] ?? null } },
@@ -115,7 +117,7 @@ function football(path, q) {
   }
   if (path === '/injuries') return [{ player: { id: 1, name: 'Jogador Lesionado', type: 'Missing Fixture', reason: 'Knee Injury' }, team: team(2) }]
   if (path === '/odds') return [{ bookmakers: [{ id: 8, name: 'Bet365', bets: [{ id: 1, name: 'Match Winner', values: [{ value: 'Home', odd: '2.10' }, { value: 'Draw', odd: '3.30' }, { value: 'Away', odd: '3.60' }] }, { id: 5, name: 'Goals Over/Under', values: [{ value: 'Over 1.5', odd: '1.30' }, { value: 'Under 1.5', odd: '3.40' }, { value: 'Over 2.5', odd: '1.95' }, { value: 'Under 2.5', odd: '1.85' }] }, { id: 8, name: 'Both Teams Score', values: [{ value: 'Yes', odd: '1.80' }, { value: 'No', odd: '2.00' }] }] }] }]
-  if (path === '/standings') return [{ league: { standings: [[1, 2, 3, 4, 5, 6].map((id, i) => ({ rank: i + 1, team: team(id), points: 60 - i * 4, goalsDiff: 20 - i * 3, all: { played: 30 }, description: i === 0 ? 'Promotion - Libertadores' : null }))] } }]
+  if (path === '/standings') return [{ league: { standings: [[1, 2, 3, 4, 5, 6].map((id, i) => ({ rank: i + 1, team: team(id), points: 60 - i * 4, goalsDiff: 20 - i * 3, form: ['WWDWL', 'WDWWW', 'LWDWD', 'DDWLW', 'WLLDW', 'LDWLL'][i], all: { played: 30, win: 18 - i, draw: 6 - (i % 3), lose: 6 + i - (6 - (i % 3)) + (i % 3), goals: { for: 50 - i * 3, against: 30 + i } }, description: i === 0 ? 'Promotion - Libertadores' : null }))] } }]
   if (path === '/players') {
     const teamId = Number(q.get('team'))
     return [1, 2, 3, 4].map((k) => ({ player: { id: teamId * 10 + k, name: `Atacante ${TEAMS[teamId]} ${k}` }, statistics: [{ team: team(teamId), league: { id: null, season: 2026 }, games: { appearences: 12, minutes: 900, position: 'Attacker' }, shots: { total: 40 - k * 6, on: 18 - k * 3 }, goals: { total: 6 - k } }] }))
@@ -184,6 +186,18 @@ http
     })
     const handle = () => {
       res.setHeader('content-type', 'application/json')
+      if (url.pathname.startsWith('/media/')) {
+        // Escudos de teste (as imagens da fonte real não contam na cota).
+        const file = new URL(`./media/${url.pathname.slice(7).replace(/[^a-z0-9/._-]/gi, '')}`, import.meta.url)
+        try {
+          const buf = fs.readFileSync(file)
+          res.writeHead(200, { 'content-type': 'image/png', 'access-control-allow-origin': '*' })
+          return res.end(buf)
+        } catch {
+          res.writeHead(404)
+          return res.end()
+        }
+      }
       if (url.pathname === '/__calls') return res.end(JSON.stringify(calls))
       if (url.pathname.startsWith('/football')) {
         if (!req.headers['x-apisports-key']) return res.end(JSON.stringify({ errors: { token: 'missing key' }, response: [] }))

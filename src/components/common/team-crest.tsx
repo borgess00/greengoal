@@ -1,24 +1,30 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { cachedLogoUrl } from '@/lib/logos'
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 
 /** Escudo vindo da API; sem imagem, mostra as iniciais em um círculo neutro. */
 export function TeamCrest({ name, logo, size = 32, className }: { name: string; logo?: string | null; size?: number; className?: string }) {
-  const [failed, setFailed] = React.useState(false)
+  // 0 = cópia guardada no site, 1 = original da fonte, 2 = iniciais.
+  const [step, setStep] = React.useState(0)
+  const chain = [cachedLogoUrl(logo, SUPABASE_URL), logo].filter(Boolean) as string[]
+  const src = chain[step]
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join('')
-  if (logo && !failed) {
+  if (src) {
     return (
       <img
-        src={logo}
+        src={src}
         alt=""
         width={size}
         height={size}
         loading="lazy"
-        onError={() => setFailed(true)}
+        onError={() => setStep((x) => x + 1)}
         className={cn('shrink-0 object-contain', className)}
         style={{ width: size, height: size }}
       />

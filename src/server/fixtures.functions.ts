@@ -61,5 +61,7 @@ export const getFixture = createServerFn({ method: 'GET' })
     if (!dbConfigured()) return null
     const { data: row, error } = await supabasePublic().from('fixtures').select(FIXTURE_COLUMNS).eq('id', data.id).maybeSingle()
     if (error) throw new Error('Não foi possível carregar a partida.')
-    return (row as FixtureRow | null) ?? null
+    if (!row) return null
+    const [withHot] = await withForms([row as FixtureRow])
+    return withHot
   })

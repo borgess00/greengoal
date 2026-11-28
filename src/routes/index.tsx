@@ -6,7 +6,6 @@ import { EmptyState } from '@/components/common/empty-state'
 import { TeamCrest } from '@/components/common/team-crest'
 import { FixtureCard, FixtureCardSkeleton } from '@/components/fixtures/fixture-card'
 import { FeaturedMatchCard } from '@/components/stats/featured-match'
-import { FormBadges } from '@/components/stats/form-badges'
 import { MarketAngleCard } from '@/components/stats/market-angles'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
@@ -188,7 +187,20 @@ function HomePage() {
             ))}
           </ul>
           </div>
-          <PhonePreview featured={featured.data ?? null} />
+          <figure className="relative">
+            <div className="absolute inset-[15%] rounded-full bg-brand-light/20 blur-3xl" aria-hidden />
+            <img
+              src="/painel-app.webp"
+              srcSet="/painel-app-410.webp 410w, /painel-app.webp 820w"
+              sizes="(min-width: 1024px) 560px, 92vw"
+              width={820}
+              height={560}
+              loading="lazy"
+              alt="Painel do GreenGoal com jogos do dia, gráfico de estatísticas da partida e cartões de análise"
+              className="relative w-full"
+            />
+            <figcaption className="relative mt-1 text-center text-[11px] text-white/40">Imagem ilustrativa.</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -292,47 +304,6 @@ function AnglesShowcase({ featured }: { featured: FeaturedMatch | null }) {
       <p className="relative text-right text-xs text-white/45">
         Dados reais de {featured!.fixture.home_team_name} x {featured!.fixture.away_team_name}, hoje às {featured!.fixture.local_time}.
       </p>
-    </div>
-  )
-}
-
-/** Moldura de celular com cartões reais do destaque do dia (ou a imagem do app). */
-function PhonePreview({ featured }: { featured: FeaturedMatch | null }) {
-  if (!featured) {
-    return <img src="/celulares-app-640.webp" alt="" width={533} height={598} className="mx-auto w-full max-w-sm drop-shadow-2xl" loading="lazy" />
-  }
-  const f = featured.fixture
-  return (
-    <div className="relative mx-auto w-full max-w-[360px]">
-      <div className="absolute -inset-8 rounded-[3rem] bg-brand-light/25 blur-3xl" aria-hidden />
-      <div className="relative rounded-[2.6rem] border border-white/15 bg-gradient-to-b from-white/10 to-white/[0.02] p-2.5 shadow-[0_40px_80px_-30px_rgb(0_0_0/0.8)]">
-        <div className="overflow-hidden rounded-[2.1rem] border border-white/10 bg-ink-2 px-4 pt-4 pb-6">
-          <div className="mx-auto mb-4 h-6 w-28 rounded-full bg-black" aria-hidden />
-          <p className="text-xs text-white/50">{f.league_name} · hoje {f.local_time}</p>
-          <p className="mt-1 font-display text-lg font-bold">
-            {f.home_team_name} x {f.away_team_name}
-          </p>
-          <div className="mt-4 space-y-2">
-            {[
-              { name: f.home_team_name, logo: f.home_team_logo, form: featured.form.home },
-              { name: f.away_team_name, logo: f.away_team_logo, form: featured.form.away },
-            ].map((t) => (
-              <div key={t.name} className="flex items-center justify-between gap-2 rounded-xl bg-white/5 px-3 py-2">
-                <span className="flex min-w-0 items-center gap-2 text-sm font-semibold">
-                  <TeamCrest name={t.name} logo={t.logo} size={20} />
-                  <span className="truncate">{t.name}</span>
-                </span>
-                <FormBadges form={t.form} size="sm" />
-              </div>
-            ))}
-          </div>
-          {featured.markets[0] && (
-            <div className="mt-4">
-              <MarketAngleCard m={featured.markets[0]} tone="dark" />
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

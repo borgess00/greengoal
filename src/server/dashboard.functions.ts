@@ -40,6 +40,7 @@ interface Fx {
   away_team_logo: string | null
   form_home?: string | null
   form_away?: string | null
+  hot_markets?: number | null
 }
 
 export interface PickCard {
@@ -196,8 +197,10 @@ export const getDashboard = createServerFn({ method: 'GET' })
   })
 
 async function formsFor(ids: number[]) {
-  if (!ids.length) return new Map<number, { form_home: string | null; form_away: string | null }>()
-  const { data, error } = await supabaseAdmin().from('fixtures').select('id, form_home, form_away').in('id', ids)
-  if (error) return new Map()
-  return new Map((data ?? []).map((r) => [r.id as number, { form_home: r.form_home as string | null, form_away: r.form_away as string | null }]))
+  type F = { form_home: string | null; form_away: string | null; hot_markets?: number | null }
+  if (!ids.length) return new Map<number, F>()
+  const full = await supabaseAdmin().from('fixtures').select('id, form_home, form_away, hot_markets').in('id', ids)
+  const res = full.error ? await supabaseAdmin().from('fixtures').select('id, form_home, form_away').in('id', ids) : full
+  if (res.error) return new Map<number, F>()
+  return new Map(((res.data ?? []) as Array<F & { id: number }>).map((r) => [r.id, { form_home: r.form_home, form_away: r.form_away, hot_markets: r.hot_markets ?? null }]))
 }

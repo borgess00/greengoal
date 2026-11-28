@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { LogoImg } from '@/components/common/logo-img'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query'
 import { ArrowDownUp, ArrowUpRight, CalendarDays, ChevronLeft, ChevronRight, Flag, Globe, MapPin, UserRound } from 'lucide-react'
@@ -10,6 +11,7 @@ import { FinishedMatchStats, ResultEvents, useMatchResult } from '@/components/r
 import { MarketPicker, canBet } from '@/components/slips/market-picker'
 import { FormBadges } from '@/components/stats/form-badges'
 import { FormDashes } from '@/components/stats/form-dashes'
+import { HotBadge } from '@/components/stats/hot-badge'
 import { Button } from '@/components/ui/button'
 import { NativeSelect } from '@/components/ui/select-native'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -232,7 +234,7 @@ function JogosPage() {
                 {g.leagues.map((l) => (
                   <div key={l.leagueId}>
                     <h3 className="flex items-center gap-2 px-4 pt-3 pb-1 text-xs font-bold tracking-wide text-muted-foreground uppercase">
-                      {l.leagueLogo && <img src={l.leagueLogo} alt="" width={16} height={16} className="size-4 object-contain" loading="lazy" />}
+                      {l.leagueLogo && <LogoImg src={l.leagueLogo} alt="" width={16} height={16} className="size-4 object-contain" loading="lazy" />}
                       {l.leagueName}
                     </h3>
                     <ul>
@@ -286,7 +288,7 @@ function CompetitionFacets({
             {g.leagues.map((l) => (
               <li key={l.leagueId}>
                 <button type="button" className={item(liga === l.leagueId)} onClick={() => onPick(g.country, l.leagueId)}>
-                  {l.leagueLogo ? <img src={l.leagueLogo} alt="" width={14} height={14} className="size-3.5 shrink-0 object-contain" loading="lazy" /> : <span className="size-3.5 shrink-0" />}
+                  {l.leagueLogo ? <LogoImg src={l.leagueLogo} alt="" width={14} height={14} className="size-3.5 shrink-0 object-contain" loading="lazy" /> : <span className="size-3.5 shrink-0" />}
                   <span className="flex-1 truncate">{l.leagueName}</span>
                   <span className="text-xs tabular">{l.fixtures.length}</span>
                 </button>
@@ -329,6 +331,7 @@ function MatchRow({ f, active }: { f: FixtureRow; active: boolean }) {
             <span className="text-muted-foreground tabular">
               {f.local_time}
               <span className="block text-[10px] font-semibold">{finished ? 'FT' : VOID.has(f.status_short) ? statusLabel(f.status_short) : ''}</span>
+              <HotBadge count={f.hot_markets} compact className="mt-0.5" />
             </span>
           )}
         </span>
@@ -367,17 +370,20 @@ function MatchPanel({ f }: { f: FixtureRow }) {
     <div className="space-y-4">
       <div className="rounded-2xl border bg-card p-5">
         <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>{formatGradeDate(f.grade_date)}</span>
-          <span className="flex items-center gap-1.5 truncate">
-            {f.league_logo && <img src={f.league_logo} alt="" width={14} height={14} className="size-3.5 object-contain" />}
-            {f.league_name}
+          <span className="flex items-center gap-2">
+            {formatGradeDate(f.grade_date)}
+            <HotBadge count={f.hot_markets} />
           </span>
+          <Link to="/campeonato/$id" params={{ id: String(f.league_id) }} className="flex items-center gap-1.5 truncate hover:text-foreground">
+            {f.league_logo && <LogoImg src={f.league_logo} alt="" width={14} height={14} className="size-3.5 object-contain" />}
+            {f.league_name}
+          </Link>
           <Link to="/jogo/$id" params={{ id: String(f.id) }} className="grid size-8 place-items-center rounded-full border hover:bg-muted" aria-label="Abrir página da partida" title="Abrir página da partida">
             <ArrowUpRight className="size-4" />
           </Link>
         </div>
         <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <TeamHead name={f.home_team_name} logo={f.home_team_logo} form={f.form_home} />
+          <TeamHead id={f.home_team_id} name={f.home_team_name} logo={f.home_team_logo} form={f.form_home} />
           <div className="text-center">
             <p className={cn('font-display text-4xl font-bold tabular', live ? 'text-red-600 dark:text-red-400' : 'text-brand-dark')}>
               {showScore ? `${f.goals_home} – ${f.goals_away}` : f.local_time}
@@ -386,7 +392,7 @@ function MatchPanel({ f }: { f: FixtureRow }) {
               {finished ? 'Encerrado' : live ? `${statusLabel(f.status_short)} ${f.elapsed ?? ''}'` : VOID.has(f.status_short) ? statusLabel(f.status_short) : 'Horário de Brasília'}
             </p>
           </div>
-          <TeamHead name={f.away_team_name} logo={f.away_team_logo} form={f.form_away} />
+          <TeamHead id={f.away_team_id} name={f.away_team_name} logo={f.away_team_logo} form={f.form_away} />
         </div>
         <ResultEvents events={events} className="mt-4" />
         {(f.venue || f.referee) && (
@@ -455,11 +461,13 @@ function MatchPanel({ f }: { f: FixtureRow }) {
   )
 }
 
-function TeamHead({ name, logo, form }: { name: string; logo: string | null; form?: string | null }) {
+function TeamHead({ id, name, logo, form }: { id: number; name: string; logo: string | null; form?: string | null }) {
   return (
     <div className="flex min-w-0 flex-col items-center gap-2 text-center">
       <TeamCrest name={name} logo={logo} size={48} />
-      <p className="w-full truncate font-display font-bold">{name}</p>
+      <Link to="/time/$id" params={{ id: String(id) }} className="w-full truncate font-display font-bold hover:text-primary">
+        {name}
+      </Link>
       <FormDashes form={form} />
     </div>
   )

@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import type * as React from 'react'
+import * as React from 'react'
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts, useRouterState } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 import appCss from '@/styles.css?url'
@@ -15,6 +15,7 @@ import { DefaultError, NotFound } from '@/components/common/route-states'
 import { seo } from '@/lib/seo'
 import { SITE } from '@/lib/site'
 import { THEME_SCRIPT } from '@/lib/theme'
+import { registerServiceWorker } from '@/lib/pwa'
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => {
@@ -82,6 +83,7 @@ function RootLayout() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  React.useEffect(() => registerServiceWorker(), [])
   return (
     <html lang="pt-BR" className="dark" suppressHydrationWarning>
       <head>

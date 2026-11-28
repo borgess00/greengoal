@@ -1,3 +1,4 @@
+import type * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
@@ -30,10 +31,10 @@ function CompareLine({ l }: { l: StatLine }) {
       </div>
       <div className="grid grid-cols-2 gap-1.5" aria-hidden>
         <div className="flex h-1.5 justify-end overflow-hidden rounded-full bg-muted">
-          <span className="h-full rounded-full bg-series-home" style={{ width: `${(h / max) * 100}%` }} />
+          <span className="bar-grow h-full rounded-full bg-series-home" style={{ width: `${(h / max) * 100}%`, '--grow-from': 'right' } as React.CSSProperties} />
         </div>
         <div className="flex h-1.5 overflow-hidden rounded-full bg-muted">
-          <span className="h-full rounded-full bg-series-away" style={{ width: `${(a / max) * 100}%` }} />
+          <span className="bar-grow h-full rounded-full bg-series-away" style={{ width: `${(a / max) * 100}%` }} />
         </div>
       </div>
     </div>

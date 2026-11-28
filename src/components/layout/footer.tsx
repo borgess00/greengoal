@@ -30,6 +30,8 @@ export function Footer() {
             { to: '/jogos', label: 'Partidas' },
             { to: '/bilhetes-prontos', label: 'Bilhetes prontos' },
             { to: '/meus-bilhetes', label: 'Meus bilhetes' },
+            { to: '/historico', label: 'Histórico de acertos' },
+            { to: '/comparar', label: 'Comparar times' },
             { to: '/escanteios', label: 'Radar de escanteios' },
             { to: '/planos', label: 'Planos' },
           ]}

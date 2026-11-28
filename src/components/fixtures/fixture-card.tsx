@@ -1,8 +1,10 @@
 import { Link } from '@tanstack/react-router'
+import { LogoImg } from '@/components/common/logo-img'
 import { ChevronRight, Clock, Sparkles } from 'lucide-react'
 import { TeamCrest } from '@/components/common/team-crest'
 import { Badge } from '@/components/ui/badge'
 import { FormBadges } from '@/components/stats/form-badges'
+import { HotBadge } from '@/components/stats/hot-badge'
 import { isFinished, isLive, statusLabel } from '@/lib/fixture-status'
 import type { FixtureRow } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -16,14 +18,14 @@ export function FixtureCard({ fixture, className }: { fixture: FixtureRow; class
       to="/jogo/$id"
       params={{ id: String(fixture.id) }}
       className={cn(
-        'group relative flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift focus-visible:ring-2 focus-visible:ring-ring outline-none',
+        'enter-up group relative flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift focus-visible:ring-2 focus-visible:ring-ring outline-none',
         className,
       )}
       aria-label={`${fixture.home_team_name} x ${fixture.away_team_name}, ${fixture.local_time}, ${fixture.league_name}. Ver análise`}
     >
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="flex min-w-0 items-center gap-1.5 font-semibold text-muted-foreground">
-          {fixture.league_logo && <img src={fixture.league_logo} alt="" width={16} height={16} className="size-4 object-contain" loading="lazy" />}
+          {fixture.league_logo && <LogoImg src={fixture.league_logo} alt="" width={16} height={16} className="size-4 object-contain" loading="lazy" />}
           <span className="truncate">{fixture.league_name}</span>
         </span>
         {live ? (
@@ -46,7 +48,9 @@ export function FixtureCard({ fixture, className }: { fixture: FixtureRow; class
         <span className="font-display text-lg font-bold tabular text-brand-dark">{showScore ? fixture.goals_away : ''}</span>
       </div>
       <div className="flex items-center justify-between border-t pt-3 text-xs">
-        {fixture.has_analysis ? (
+        {fixture.hot_markets != null && fixture.hot_markets >= 3 ? (
+          <HotBadge count={fixture.hot_markets} />
+        ) : fixture.has_analysis ? (
           <span className="flex items-center gap-1 font-semibold text-primary">
             <Sparkles className="size-3.5" /> Análise publicada
           </span>

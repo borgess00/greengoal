@@ -374,3 +374,32 @@ export function marketAngles(opts: {
 export function rankMarkets(list: MarketAngles[]): MarketAngles[] {
   return [...list].sort((a, b) => b.floor - a.floor || b.rate - a.rate || b.sample - a.sample)
 }
+
+// ---------------------------------------------------------------------
+// "Jogo quente": vários mercados que se repetiram em TODOS os ângulos.
+// ---------------------------------------------------------------------
+
+export const HOT_FLOOR = 80 // % mínima em cada ângulo com 3+ jogos
+export const HOT_SAMPLE = 5 // jogos mínimos no recorte principal
+export const HOT_MIN_MARKETS = 3
+
+/** Quantos mercados (das duas equipes) bateram em 80%+ em todos os ângulos. */
+export function hotMarketCount(list: MarketAngles[]): number {
+  return list.filter((m) => m.floor >= HOT_FLOOR && m.sample >= HOT_SAMPLE).length
+}
+
+export function isHot(count: number | null | undefined) {
+  return (count ?? 0) >= HOT_MIN_MARKETS
+}
+
+/** Mercados por ângulo das duas equipes de uma partida (atalho usado no servidor). */
+export function fixtureMarkets(opts: {
+  home: { name: string; games: GameRow[]; h2h: GameRow[] }
+  away: { name: string; games: GameRow[]; h2h: GameRow[] }
+  league: string
+}): MarketAngles[] {
+  return [
+    ...marketAngles({ team: opts.home.name, side: 'home', games: opts.home.games, venue: 'casa', league: opts.league, opponent: opts.away.name, h2h: opts.home.h2h }),
+    ...marketAngles({ team: opts.away.name, side: 'away', games: opts.away.games, venue: 'fora', league: opts.league, opponent: opts.home.name, h2h: opts.away.h2h }),
+  ]
+}

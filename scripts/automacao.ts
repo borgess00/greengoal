@@ -8,6 +8,7 @@
 // ANTHROPIC_API_KEY (ou OPENAI_API_KEY); opcional ANTHROPIC_MODEL.
 import { isValidDate } from '../src/lib/grade'
 import { runAutomation } from '../src/server/pipeline.server'
+import { runNotifications } from '../src/server/notify.server'
 
 const arg = process.argv[2]
 const date = arg && isValidDate(arg) ? arg : undefined
@@ -15,3 +16,6 @@ const date = arg && isValidDate(arg) ? arg : undefined
 const report = await runAutomation({ date, log: (m) => console.log(m) })
 console.log(JSON.stringify({ date: report.date, generated: report.generated, failed: report.failed, limitReached: report.limitReached, tickets: report.tickets, stats: report.stats, results: report.results, settled: report.settled, skipped: report.skipped }))
 if (report.skipped && /ausente/.test(report.skipped)) process.exit(1)
+
+// Avisos: Discord, notificações no aparelho e e-mails (cada um só roda se tiver a chave).
+await runNotifications(report.date, (m) => console.log(m))

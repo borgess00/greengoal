@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound, useLocation } from '@tanstack/react-router'
+import { LogoImg } from '@/components/common/logo-img'
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CalendarDays, Clock, FileClock, MapPin, RefreshCw, UserRound } from 'lucide-react'
 import { toast } from 'sonner'
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FavoriteStar } from '@/components/stats/favorite-star'
+import { HotBadge } from '@/components/stats/hot-badge'
 import { MatchStatsSection } from '@/components/stats/match-stats-panel'
 import { FinishedMatchStats, ResultEvents, useMatchResult } from '@/components/results/match-result-view'
 import { MarketPicker, canBet } from '@/components/slips/market-picker'
@@ -90,9 +92,12 @@ function JogoPage() {
             <ArrowLeft className="size-4" /> Jogos de {formatGradeDate(fixture.grade_date).toLowerCase()}
           </Link>
           <div className="mb-6 flex flex-wrap items-center gap-2 text-sm">
-            {fixture.league_logo && <img src={fixture.league_logo} alt="" width={22} height={22} className="size-5 rounded bg-white object-contain p-0.5" />}
-            <span className="font-semibold">{fixture.league_name}</span>
+            {fixture.league_logo && <LogoImg src={fixture.league_logo} alt="" width={22} height={22} className="size-5 rounded bg-white object-contain p-0.5" />}
+            <Link to="/campeonato/$id" params={{ id: String(fixture.league_id) }} className="font-semibold hover:underline">
+              {fixture.league_name}
+            </Link>
             {fixture.league_round && <span className="text-emerald-100/80">· {fixture.league_round}</span>}
+            <HotBadge count={fixture.hot_markets} tone="onDark" />
           </div>
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-8">
             <TeamBlock id={fixture.home_team_id} name={fixture.home_team_name} logo={fixture.home_team_logo} label="Mandante" />
@@ -220,7 +225,9 @@ function TeamBlock({ id, name, logo, label }: { id: number; name: string; logo: 
         </div>
         <FavoriteStar teamId={id} teamName={name} teamLogo={logo} className="absolute -top-2 -right-3 size-8 bg-brand-deep/70" />
       </div>
-      <p className="font-display text-base leading-tight font-bold sm:text-xl">{name}</p>
+      <Link to="/time/$id" params={{ id: String(id) }} className="font-display text-base leading-tight font-bold hover:underline sm:text-xl">
+        {name}
+      </Link>
       <p className="text-[11px] tracking-wider text-emerald-100/70 uppercase">{label}</p>
     </div>
   )

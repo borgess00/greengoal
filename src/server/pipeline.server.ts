@@ -17,8 +17,9 @@ import {
 } from '@/lib/ready-tickets'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 import { aiConfigured, generateAiAnalysis, structuredCall } from './ai.server'
-import { collectCornerData, collectFixtureBundle, collectFixtureResult, footballConfigured, readCollectOptions, syncGrade } from './football.server'
+import { collectCornerData, collectFixtureBundle, collectFixtureResult, collectStandings, footballConfigured, readCollectOptions, syncGrade } from './football.server'
 import { settleAllOpenSlips } from './slips.server'
+import { cacheLogos } from './logos.server'
 
 const STALE_GENERATING_MS = 10 * 60_000
 
@@ -367,6 +368,33 @@ export async function runAutomation(opts: { date?: string; log?: (msg: string) =
       }
     }
     say(`Resultados de partidas encerradas coletados: ${out.results} (limite configurado: ${maxResults})`)
+  }
+
+  // 2b1) Classificação dos campeonatos com jogos hoje (página do campeonato).
+  const maxStandings = Math.max(0, await readNumberSetting('auto_max_standings', 4))
+  if (maxStandings > 0) {
+    const { data: lg } = await db.from('fixtures').select('league_id, season').eq('grade_date', date)
+    const seen = new Map<number, number>()
+    for (const r of lg ?? []) if (!seen.has(r.league_id as number)) seen.set(r.league_id as number, r.season as number)
+    const leaguesToday = [...seen.entries()].sort((a, b) => (prio.get(a[0]) ?? 999) - (prio.get(b[0]) ?? 999)).slice(0, maxStandings)
+    let ok = 0
+    for (const [leagueId, season] of leaguesToday) {
+      try {
+        if ((await collectStandings(leagueId, season)).saved) ok++
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        if (/request limit|requests? (per day|limit)|reached the limit/i.test(message)) break
+      }
+    }
+    say(`Classificações atualizadas: ${ok} de ${leaguesToday.length}`)
+  }
+
+  // 2b2) Escudos e logos guardados no próprio site (não gasta cota da API).
+  try {
+    const r = await cacheLogos([yesterday, date])
+    say(`Logos guardados agora: ${r.saved}${r.failed ? ` (${r.failed} falha(s))` : ''}`)
+  } catch (e) {
+    say(`Logos: não foi possível guardar (${e instanceof Error ? e.message : String(e)}). Rode a atualização do banco para criar o bucket "logos".`)
   }
 
   // 2c) Confere os bilhetes salvos pelos usuários ("Meus bilhetes").

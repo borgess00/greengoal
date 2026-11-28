@@ -22,7 +22,7 @@ import type {
 } from '@/lib/api-football-types'
 import { FINISHED } from '@/lib/fixture-status'
 import { gradeDateFor, spParts, TIMEZONE } from '@/lib/grade'
-import { formString, teamGames } from '@/lib/match-stats'
+import { fixtureMarkets, formString, hotMarketCount, teamGames } from '@/lib/match-stats'
 import { supabaseAdmin } from '@/integrations/supabase/supabase.server'
 
 // API_FOOTBALL_BASE_URL permite apontar para um servidor de testes local.
@@ -348,13 +348,32 @@ export async function collectFixtureResult(fixtureId: number, tracker: CallTrack
 }
 
 /**
- * Grava a forma recente (V/E/D) nas colunas da partida. Ignora falhas: a
- * coluna pode não existir se a atualização do banco ainda não foi aplicada.
+ * Grava os derivados da coleta na partida: forma recente (V/E/D) e quantos
+ * mercados se repetiram em todos os ângulos ("jogo quente"). Ignora falhas:
+ * as colunas podem não existir se a atualização do banco não foi aplicada.
  */
-export async function saveForms(fixtureId: number, homeId: number, awayId: number, last: { home?: ApiFixture[]; away?: ApiFixture[] }) {
-  const form_home = formString(teamGames(homeId, last.home, undefined), 10)
-  const form_away = formString(teamGames(awayId, last.away, undefined), 10)
-  await supabaseAdmin().from('fixtures').update({ form_home, form_away }).eq('id', fixtureId).then(
+export async function saveDerived(
+  fixtureId: number,
+  info: { homeId: number; awayId: number; homeName: string; awayName: string; league: string },
+  last: { home?: ApiFixture[]; away?: ApiFixture[] },
+  matchStats?: Record<string, ApiFixtureTeamStatistics[]>,
+  h2h?: ApiFixture[],
+) {
+  const home = teamGames(info.homeId, last.home, matchStats)
+  const away = teamGames(info.awayId, last.away, matchStats)
+  const hot = hotMarketCount(
+    fixtureMarkets({
+      home: { name: info.homeName, games: home, h2h: teamGames(info.homeId, h2h, matchStats) },
+      away: { name: info.awayName, games: away, h2h: teamGames(info.awayId, h2h, matchStats) },
+      league: info.league,
+    }),
+  )
+  const db = supabaseAdmin()
+  await db.from('fixtures').update({ form_home: formString(home, 10), form_away: formString(away, 10) }).eq('id', fixtureId).then(
+    () => undefined,
+    () => undefined,
+  )
+  await db.from('fixtures').update({ hot_markets: hot }).eq('id', fixtureId).then(
     () => undefined,
     () => undefined,
   )
@@ -473,8 +492,34 @@ export async function collectFixtureBundle(fixtureId: number, opts: CollectOptio
     .from('fixture_data')
     .upsert({ fixture_id: fixtureId, payload: bundle as never, sources, api_calls: tracker.calls, collected_at: new Date().toISOString() })
 
-  await saveForms(fixtureId, homeId, awayId, bundle.lastFixtures)
+  if (standings.ok && standings.value) {
+    await supabaseAdmin()
+      .from('league_standings')
+      .upsert({ league_id: leagueId, season, standings: standings.value as never, updated_at: new Date().toISOString() })
+      .then(
+        () => undefined,
+        () => undefined,
+      )
+  }
+  await saveDerived(
+    fixtureId,
+    { homeId, awayId, homeName: fixture.teams.home.name, awayName: fixture.teams.away.name, league: fixture.league.name },
+    bundle.lastFixtures,
+    matchStats,
+    bundle.h2h,
+  )
   return { bundle, sources, tracker }
+}
+
+/** Classificação de um campeonato (1 consulta, cache de 6 h) guardada para a página do campeonato. */
+export async function collectStandings(leagueId: number, season: number, tracker: CallTracker = newTracker()) {
+  const table = await cached(`standings:${leagueId}:${season}`, 6 * 3600, tracker, async () =>
+    (await request<Array<{ league: { standings: ApiStandingRow[][] } }>>('/standings', { league: leagueId, season }, tracker)).response?.[0]?.league?.standings ?? null,
+  )
+  if (!table) return { saved: false, tracker }
+  const { error } = await supabaseAdmin().from('league_standings').upsert({ league_id: leagueId, season, standings: table as never, updated_at: new Date().toISOString() })
+  if (error) throw new Error(error.message)
+  return { saved: true, tracker }
 }
 
 /** Confere IDs de campeonatos na API e atualiza nome, país e logo. */
@@ -508,7 +553,7 @@ export async function verifyLeagues(ids: number[]) {
 export async function collectCornerData(fixtureId: number, opts: CollectOptions) {
   const tracker = newTracker()
   const db = supabaseAdmin()
-  const { data: fx } = await db.from('fixtures').select('id, season, home_team_id, away_team_id').eq('id', fixtureId).maybeSingle()
+  const { data: fx } = await db.from('fixtures').select('id, season, home_team_id, away_team_id, home_team_name, away_team_name, league_name').eq('id', fixtureId).maybeSingle()
   if (!fx) throw new Error('Partida não encontrada no banco.')
   const { data: existing } = await db.from('fixture_data').select('sources').eq('fixture_id', fixtureId).maybeSingle()
   if (existing && !(existing.sources as Record<string, unknown>)?.light) return { skipped: true, tracker }
@@ -536,6 +581,11 @@ export async function collectCornerData(fixtureId: number, opts: CollectOptions)
     api_calls: tracker.calls,
     collected_at: new Date().toISOString(),
   })
-  await saveForms(fixtureId, fx.home_team_id as number, fx.away_team_id as number, { home, away })
+  await saveDerived(
+    fixtureId,
+    { homeId: fx.home_team_id as number, awayId: fx.away_team_id as number, homeName: fx.home_team_name as string, awayName: fx.away_team_name as string, league: fx.league_name as string },
+    { home, away },
+    matchStats,
+  )
   return { skipped: false, tracker }
 }

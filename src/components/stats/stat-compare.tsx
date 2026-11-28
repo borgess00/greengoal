@@ -1,3 +1,4 @@
+import type * as React from 'react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -42,8 +43,8 @@ export function StatCompare({
       <div className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-muted" aria-hidden>
         {both && total > 0 && (
           <>
-            <span className="h-full rounded-l-full bg-series-home" style={{ width: `${homeShare}%` }} />
-            <span className="h-full flex-1 rounded-r-full bg-series-away" />
+            <span className="bar-grow h-full rounded-l-full bg-series-home" style={{ width: `${homeShare}%` }} />
+            <span className="bar-grow h-full flex-1 rounded-r-full bg-series-away" style={{ '--grow-from': 'right' } as React.CSSProperties} />
           </>
         )}
       </div>
