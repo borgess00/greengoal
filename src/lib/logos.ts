@@ -1,3 +1,4 @@
+import * as React from 'react'
 // Escudos e logos guardados no Storage do próprio Supabase (bucket "logos").
 // A automação copia as imagens da fonte; o site tenta a cópia primeiro e,
 // se não existir, usa a original.
@@ -16,4 +17,18 @@ export function cachedLogoUrl(url: string | null | undefined, supabaseUrl: strin
   const path = logoPath(url)
   if (!path || !supabaseUrl) return null
   return `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/logos/${path}`
+}
+
+/**
+ * Erros de imagem que acontecem antes da hidratação do React não disparam
+ * onError. Depois de montar, confere se a imagem já falhou e avança.
+ */
+export function useImageFallback(step: number, next: () => void) {
+  const ref = React.useRef<HTMLImageElement>(null)
+  React.useEffect(() => {
+    const img = ref.current
+    if (img && img.complete && img.naturalWidth === 0) next()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step])
+  return ref
 }

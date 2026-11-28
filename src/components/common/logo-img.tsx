@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { cachedLogoUrl } from '@/lib/logos'
+import { cachedLogoUrl, useImageFallback } from '@/lib/logos'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 
@@ -8,6 +8,7 @@ export function LogoImg({ src, ...props }: Omit<React.ComponentProps<'img'>, 'sr
   const cached = cachedLogoUrl(src, SUPABASE_URL)
   const [step, setStep] = React.useState(0)
   const chain = [cached, src].filter(Boolean) as string[]
+  const ref = useImageFallback(step, () => setStep((s) => s + 1))
   if (!chain[step]) return null
-  return <img {...props} src={chain[step]} onError={() => setStep((s) => s + 1)} />
+  return <img {...props} ref={ref} src={chain[step]} onError={() => setStep((s) => s + 1)} />
 }

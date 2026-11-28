@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
-import { cachedLogoUrl } from '@/lib/logos'
+import { cachedLogoUrl, useImageFallback } from '@/lib/logos'
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 
@@ -10,6 +10,7 @@ export function TeamCrest({ name, logo, size = 32, className }: { name: string; 
   const [step, setStep] = React.useState(0)
   const chain = [cachedLogoUrl(logo, SUPABASE_URL), logo].filter(Boolean) as string[]
   const src = chain[step]
+  const ref = useImageFallback(step, () => setStep((x) => x + 1))
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -19,6 +20,7 @@ export function TeamCrest({ name, logo, size = 32, className }: { name: string; 
   if (src) {
     return (
       <img
+        ref={ref}
         src={src}
         alt=""
         width={size}
