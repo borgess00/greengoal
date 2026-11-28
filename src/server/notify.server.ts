@@ -2,7 +2,7 @@
 // e resumo no Discord. Roda no fim da automação diária (GitHub Actions).
 // Cada aviso é enviado uma vez só (notification_log / sync_runs).
 // Exclusivo do servidor.
-import { addDays, spParts, spToday } from '@/lib/grade'
+import { addDays, spParts } from '@/lib/grade'
 import { TIER_LABEL, ticketTier, type ReadyTicket } from '@/lib/ready-tickets'
 import { settleReadyTicket, summarizeHistory } from '@/lib/ticket-history'
 import { FINISHED } from '@/lib/fixture-status'
@@ -49,7 +49,7 @@ async function webpush() {
   const pub = process.env.VAPID_PUBLIC_KEY
   const priv = process.env.VAPID_PRIVATE_KEY
   if (!pub || !priv) return (webpushReady = null)
-  const mod = (await import('web-push')).default
+  const mod = await import('web-push')
   mod.setVapidDetails(process.env.VAPID_SUBJECT || siteUrl(), pub, priv)
   return (webpushReady = mod)
 }
@@ -433,7 +433,7 @@ export async function runDiscord(date: string, log: Log) {
 
   try {
     // Manhã/tarde: grandes jogos do dia + bilhetes prontos.
-    if (hour < 20 && !(await alreadyPosted(`manha:${date}`))) {
+    if (hour >= 6 && hour < 20 && !(await alreadyPosted(`manha:${date}`))) {
       const [{ data: fx }, { data: leagues }, { data: dt }] = await Promise.all([
         db.from('fixtures').select('id, kickoff_at, league_id, league_name, home_team_name, away_team_name, status_short, hot_markets').eq('grade_date', date).eq('status_short', 'NS'),
         db.from('leagues').select('id, priority'),
@@ -474,10 +474,10 @@ export async function runDiscord(date: string, log: Log) {
       }
     }
 
-    // Noite: como foram os bilhetes prontos de ontem + histórico.
-    const yesterday = addDays(spToday(), -1)
-    if (hour >= 20 || hour < 6) {
-      const day = hour < 6 ? yesterday : spToday()
+    // Resultado dos bilhetes prontos: os de ontem (em qualquer execução) e os
+    // de hoje à noite, quando todos os jogos já terminaram.
+    const days = [addDays(date, -1), ...(hour >= 20 ? [date] : [])]
+    for (const day of days) {
       const ref = `noite:${day}`
       if (!(await alreadyPosted(ref))) {
         const { data: dt } = await db.from('daily_tickets').select('status, content').eq('grade_date', day).maybeSingle()

@@ -52,6 +52,11 @@ public/                   logo, ícones 192/512, manifesto, og-image
 | `ANTHROPIC_MODEL` | opcional | padrão `claude-opus-5-5`; ex.: `claude-sonnet-5-5`, `claude-haiku-5-5` |
 | `OPENAI_API_KEY` | **segredo do servidor** | alternativa: IA com OpenAI |
 | `OPENAI_MODEL` | opcional | padrão `gpt-4.1-mini` |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | **segredo** (Netlify + GitHub) | notificações no aparelho; gere em Admin › Negócio › Chaves das notificações |
+| `DISCORD_WEBHOOK_URL` | **segredo** (GitHub) | resumo diário no canal do Discord |
+| `GMAIL_USER`, `GMAIL_APP_PASSWORD` | **segredo** (GitHub) | e-mails automáticos pelo Gmail (senha de app, não a senha da conta) |
+| `SITE_URL` | variável (GitHub) | endereço do site nos links de e-mails e do Discord (padrão: greengoalanalises.netlify.app) |
+| `AO_VIVO` | variável (GitHub) | `on` liga o workflow do placar ao vivo |
 
 Chaves privadas nunca vão para o navegador, para arquivos públicos ou para o repositório (`.env` está no `.gitignore`).
 Arquivos `*.server.ts` são bloqueados no bundle do cliente pelo TanStack Start.
@@ -130,10 +135,26 @@ Aplicar as migrações no Lovable Cloud / Supabase: `supabase db push` (ou cole 
 - **Automação diária**: `.github/workflows/automacao.yml` roda `scripts/automacao.ts` no GitHub Actions às 08h05, 14h05 e 23h40 (Brasília) e sob demanda (Run workflow). Também atualiza os jogos de ontem, coleta os resultados das partidas encerradas (`auto_max_results`) e confere os bilhetes dos usuários. Busca os jogos, gera até `auto_max_analyses` análises das partidas que ainda não começaram (prioridade por campeonato e horário) e depois os bilhetes. Liga/desliga e limite no painel Admin › Coleta. Segredos do repositório: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `API_FOOTBALL_KEY`, `ANTHROPIC_API_KEY` (opcional: variável `ANTHROPIC_MODEL`).
 - Roda fora do Netlify porque as funções de lá têm limite de 30 s, e uma análise pode passar disso.
 
+## Novidades (time, campeonato, comparador, histórico, avisos)
+
+- **Página do time** (`/time/$id`): forma, próximos jogos, médias 5/10 (finalizações, escanteios, cartões e posse só no Pro), últimos jogos e botão Comparar.
+- **Página do campeonato** (`/campeonato/$id`): classificação (`league_standings`, coletada pela automação nos dias com jogos, limite `auto_max_standings`), próximos jogos, resultados e médias calculadas das partidas guardadas.
+- **Comparar times** (`/comparar?a=&b=`): busca de times; Pro vê o painel completo, visitante vê forma e gols.
+- **Histórico de acertos** (`/historico`, público): bilhetes prontos dos dias passados conferidos pelo placar (`src/lib/ticket-history.ts`), taxa por faixa e por mês, com acertos e erros.
+- **Jogo quente**: `fixtures.hot_markets` = nº de mercados com ≥ 80% nos últimos 5 jogos em todos os ângulos; selo a partir de 3.
+- **Escudos guardados**: a automação copia escudos e logos para o bucket público `logos` do Supabase; o site tenta a cópia e cai no original.
+- **Bilhete em imagem**: botão “Imagem” em Meus bilhetes e nos bilhetes prontos (PNG 1080 de largura, compartilhar no celular ou baixar).
+- **App instalável**: `public/sw.js` (só notificações, sem cache offline) + manifesto; instruções em Minha conta › Notificações.
+- **Avisos** (`src/server/notify.server.ts`, no fim da automação; cada um só roda com a chave dele e pode ser desligado em Admin › Coleta):
+  notificações no aparelho (bilhetes prontos, times favoritos, bilhetes conferidos), e-mails (boas-vindas, plano perto de vencer, resumo semanal às segundas; respeitam `profiles.email_opt_out`) e Discord (grandes jogos de manhã; resultado dos bilhetes prontos depois). Envio único via `notification_log` / `sync_runs`.
+- **Placar ao vivo** (opcional): `.github/workflows/ao-vivo.yml` + `scripts/ao-vivo.mjs`, a cada 20 min das 09h à 00h, só com a variável `AO_VIVO=on` **e** `live_enabled` no Admin. Exige plano pago da API-Football. Em repositório privado, conta minutos do GitHub Actions (~45 execuções/dia).
+- **Admin › Negócio**: cadastros, assinantes por plano, receita/MRR, cancelamentos, uso de Meus bilhetes, cota das APIs, estado das automações e gerador das chaves VAPID.
+
 ## Pendências (não declarar como prontas)
 
 - **Pagamento real**: integrado com o Asaas, mas só ativo depois de configurar `ASAAS_API_KEY` e `ASAAS_WEBHOOK_TOKEN` e o webhook no painel do Asaas. Validar com uma cobrança real (ou no sandbox) antes de abrir ao público.
-- **Offline**: há manifesto e ícones, mas não há service worker nem funcionamento offline.
+- **Offline**: há manifesto, ícones e um service worker só para notificações; não há funcionamento offline.
+- **Avisos e placar ao vivo**: prontos no código e testados contra mocks; só funcionam depois de guardar as chaves (VAPID, Discord, Gmail) e, no ao vivo, com plano pago da API-Football.
 - **Integrações externas**: o código foi exercitado contra um mock local (`e2e/mock-apis.mjs`); ainda falta validar com jogos reais usando `API_FOOTBALL_KEY` e `OPENAI_API_KEY` reais.
 - **E-mail**: confirmar configurações de autenticação e entrega de e-mail no Lovable Cloud (confirmação de cadastro e recuperação de senha).
 - **Árbitro**: a fonte traz apenas o nome, não o histórico.

@@ -22,6 +22,14 @@ export const FAQ: Array<{ q: string; a: string }> = [
     a: 'Todos os dias, depois que as análises ficam prontas, a IA monta bilhetes em quatro faixas de odd total — baixa (até 2,00), média (até 5,00), alta (até 15,00) e altíssima (acima disso) — usando apenas os mercados com mais sustentação nos dados. Quando todas as seleções têm odd da fonte, o site recalcula a odd total e coloca o bilhete na faixa certa. Quanto maior a odd, menor a chance. Você pode salvar um bilhete pronto em “Meus bilhetes” para acompanhar. A odd muda até o início do jogo e nenhum bilhete tem garantia de resultado.',
   },
   {
+    q: 'Os bilhetes prontos acertam?',
+    a: 'Às vezes sim, às vezes não — e mostramos os dois. A página “Histórico de acertos” é pública e lista todos os bilhetes prontos dos dias que já passaram, conferidos pelo placar do tempo normal, com a taxa de acerto por faixa de odd e por mês. Resultado passado não garante resultado futuro.',
+  },
+  {
+    q: 'O que é o selo “Jogo quente”?',
+    a: 'Aparece quando 3 ou mais mercados se repetiram em 80% ou mais dos últimos 5 jogos dos dois times, olhando todos os ângulos (geral, casa/fora, competição e confronto direto). É uma frequência do passado, não uma previsão.',
+  },
+  {
     q: 'As análises são atualizadas automaticamente?',
     a: 'Sim. Uma rotina automática busca os jogos do dia, gera as análises das partidas prioritárias e monta os bilhetes prontos, sem ninguém precisar apertar botão.',
   },
@@ -59,7 +67,7 @@ export const FAQ: Array<{ q: string; a: string }> = [
   },
   {
     q: 'Funciona no celular? Funciona sem internet?',
-    a: 'O site foi feito para o celular e pode ser adicionado à tela inicial. Ele precisa de internet para carregar jogos e análises — não há modo offline.',
+    a: 'O site foi feito para o celular e pode ser instalado como app na tela inicial (veja em Minha conta › Notificações). Com o app, você pode ligar avisos de bilhetes prontos, jogos dos times favoritos e bilhetes conferidos. Ele precisa de internet para carregar jogos e análises — não há modo offline.',
   },
   {
     q: 'Como falo com o suporte?',

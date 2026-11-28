@@ -26,3 +26,8 @@ automação coletando estatísticas sem a chave da IA.
 `e2e/painel-bilhetes.mjs` (rodar depois dos dois anteriores) cobre: Painel com mercado oculto para visitante e revelado para
 assinante, tema claro/escuro salvo, partidas encerradas (filtro, gols e estatísticas finais), montar/salvar bilhete e
 conferência automática quando o jogo acaba, bloqueio de inserção direta e barra inferior no celular.
+
+`e2e/novidades.mjs` (rodar depois dos anteriores) cobre: página do time e do campeonato (classificação), comparador,
+histórico público conferido pelo placar, selo de jogo quente, bilhete em imagem (PNG), aba Notificações gravando as
+preferências, Admin › Negócio com o gerador de chaves VAPID, script do placar ao vivo (desligado/ligado) e
+`e2e/notify-check.ts` (chaves VAPID aceitas pelo web-push, layout dos e-mails e Discord sem repetir, contra o mock).

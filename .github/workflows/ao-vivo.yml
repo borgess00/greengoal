@@ -1,0 +1,36 @@
+# Placar ao vivo (opcional): atualiza status, minuto e placar das partidas em
+# andamento a cada 20 minutos, das 09h à 00h de Brasília.
+# Só roda quando a variável do repositório AO_VIVO = on (Settings > Secrets and
+# variables > Actions > Variables) E o "Placar ao vivo" estiver ligado no Admin.
+# Com AO_VIVO desligado, o job é pulado e não gasta minutos do GitHub Actions.
+# Precisa de um plano pago da API-Football (o gratuito tem só 100 consultas/dia).
+name: Placar ao vivo
+
+on:
+  schedule:
+    - cron: '*/20 12-23 * * *'
+    - cron: '*/20 0-2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ao-vivo
+  cancel-in-progress: true
+
+jobs:
+  atualizar:
+    if: vars.AO_VIVO == 'on' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Atualizar placares
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: node scripts/ao-vivo.mjs

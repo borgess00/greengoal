@@ -16,6 +16,7 @@ export const PLAN_FEATURES = [
   'Probabilidades, confrontos diretos e forma recente',
   'Gols, cartões, escanteios e finalizadores',
   'Radar de escanteios da grade do dia',
+  'Página do time e comparador completos: finalizações, escanteios e cartões',
   'Acesso pelo celular e computador',
 ]
 
@@ -29,6 +30,9 @@ export const FREE_FEATURES = [
   'Busca de jogos e times favoritos',
   'Meus bilhetes: monte, salve e acompanhe se bateram',
   'Partidas encerradas com estatísticas finais',
+  'Páginas de times e campeonatos, com classificação',
+  'Histórico público de acertos dos bilhetes prontos',
+  'App na tela inicial do celular',
 ]
 
 /** Economia do plano em relação a pagar o mesmo período no mensal. */

@@ -83,6 +83,12 @@ function matchStats(fixtureId) {
 
 function football(path, q) {
   if (path === '/fixtures' && q.get('date')) return remember(fixturesOn(q.get('date')))
+  // Ao vivo: as partidas guardadas que já começaram e não terminaram, no 1º tempo.
+  if (path === '/fixtures' && q.get('live') === 'all') {
+    return [...byId.values()]
+      .filter((f) => f.fixture.status.short === 'NS' && Date.parse(f.fixture.date) < Date.now() && Date.parse(f.fixture.date) > Date.now() - 2 * 3600_000)
+      .map((f) => ({ ...f, fixture: { ...f.fixture, status: { short: '1H', long: 'First Half', elapsed: 30 } }, goals: { home: 1, away: 0 }, score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } } }))
+  }
   if (path === '/fixtures' && q.get('ids')) {
     return q.get('ids').split('-').map(Number).map((id) => {
       const f = byId.get(id)
@@ -170,6 +176,9 @@ function openai(body) {
   return { choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(content) } }], usage: { total_tokens: 1234 } }
 }
 
+const discordPosts = []
+const pushes = []
+
 http
   .createServer((req, res) => {
     const url = new URL(req.url, `http://localhost:${PORT}`)
@@ -199,6 +208,18 @@ http
         }
       }
       if (url.pathname === '/__calls') return res.end(JSON.stringify(calls))
+      // Webhook do Discord e serviço de push de teste.
+      if (url.pathname === '/discord' && req.method === 'POST') {
+        discordPosts.push(JSON.parse(body || '{}'))
+        return res.end('{}')
+      }
+      if (url.pathname === '/__discord') return res.end(JSON.stringify(discordPosts))
+      if (url.pathname.startsWith('/push/') && req.method === 'POST') {
+        pushes.push({ path: url.pathname, encoding: req.headers['content-encoding'] ?? null, auth: (req.headers.authorization ?? '').slice(0, 6) })
+        res.writeHead(url.pathname === '/push/expirado' ? 410 : 201)
+        return res.end()
+      }
+      if (url.pathname === '/__push') return res.end(JSON.stringify(pushes))
       if (url.pathname.startsWith('/football')) {
         if (!req.headers['x-apisports-key']) return res.end(JSON.stringify({ errors: { token: 'missing key' }, response: [] }))
         const path = url.pathname.replace('/football', '')

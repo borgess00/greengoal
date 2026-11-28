@@ -2,7 +2,9 @@
 // Mostra só o que o bilhete tem; rodapé com aviso de risco e 18+.
 
 const W = 1080
-const H = 1350
+const MAX_H = 1350
+const MIN_H = 1080
+const ROW = 118
 const DARK = '#052E22'
 const GREEN = '#22C55E'
 const HEAD = "'Outfit Variable', 'Outfit', system-ui, sans-serif"
@@ -67,6 +69,9 @@ export async function renderTicketImage(t: TicketImage): Promise<Blob> {
   if (typeof document !== 'undefined' && document.fonts) {
     await Promise.all([document.fonts.load(`700 40px ${HEAD}`), document.fonts.load(`500 20px ${BODY}`)]).catch(() => undefined)
   }
+  // Altura conforme o número de seleções: de 1080x1080 (quadrado) a 1080x1350 (retrato).
+  const shown = Math.min(7, t.selections.length)
+  const H = Math.round(Math.max(MIN_H, Math.min(MAX_H, 320 + (t.badge ? 50 : 0) + shown * ROW + (t.selections.length > shown ? 40 : 0) + 300)))
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
@@ -129,7 +134,7 @@ export async function renderTicketImage(t: TicketImage): Promise<Blob> {
   const list = t.selections.slice(0, 7)
   const top = y + 100
   const footerTop = H - 260
-  const rowH = Math.min(118, (footerTop - top - 20) / Math.max(1, list.length))
+  const rowH = Math.min(ROW, (footerTop - top - 20) / Math.max(1, list.length))
   list.forEach((s, i) => {
     const ry = top + i * rowH
     ctx.fillStyle = 'rgba(255,255,255,0.96)'

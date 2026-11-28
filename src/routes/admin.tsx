@@ -469,6 +469,8 @@ function SettingsPanel() {
           auto_max_analyses: form.auto_max_analyses,
           auto_max_stats: form.auto_max_stats,
           auto_max_results: form.auto_max_results,
+          auto_max_standings: form.auto_max_standings,
+          ...(['live_enabled', 'discord_enabled', 'emails_enabled', 'push_enabled'] as const).reduce((o, k) => (k in form ? { ...o, [k]: !!form[k] } : o), {}),
         },
       }),
     onSuccess: () => {
@@ -533,6 +535,44 @@ function SettingsPanel() {
           />
           <p className="text-xs text-muted-foreground">Estatísticas finais e gols de partidas de ontem e de hoje (2 consultas cada, guardadas para sempre).</p>
         </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="auto_max_standings">Classificações por execução</Label>
+          <Input
+            id="auto_max_standings"
+            type="number"
+            min={0}
+            max={30}
+            value={form.auto_max_standings ?? ''}
+            onChange={(e) => setForm((s) => ({ ...s, auto_max_standings: Math.max(0, Math.min(30, Number(e.target.value))) }))}
+          />
+          <p className="text-xs text-muted-foreground">Tabela dos campeonatos com jogos no dia (1 consulta cada, uma vez por dia).</p>
+        </div>
+      </CardContent>
+    </Card>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Avisos e placar ao vivo</CardTitle>
+        <CardDescription>
+          Cada canal só funciona depois que a chave dele for guardada nos segredos (veja o guia). Aqui você liga ou desliga sem mexer nas chaves.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 md:grid-cols-2">
+        {(
+          [
+            ['discord_enabled', 'Resumo no Discord', 'Grandes jogos de manhã e resultado dos bilhetes prontos à noite (DISCORD_WEBHOOK_URL).'],
+            ['push_enabled', 'Notificações no aparelho', 'Bilhetes prontos, times favoritos e bilhetes conferidos (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY).'],
+            ['emails_enabled', 'E-mails automáticos', 'Boas-vindas, plano perto de vencer e resumo semanal (GMAIL_USER / GMAIL_APP_PASSWORD).'],
+            ['live_enabled', 'Placar ao vivo', 'Atualiza os placares a cada 20 min. Precisa de plano pago da API-Football e da variável AO_VIVO = on no GitHub.'],
+          ] as const
+        ).map(([k, label, help]) => (
+          <div key={k} className="flex items-start gap-3">
+            <Switch id={k} checked={!!form[k]} onCheckedChange={(v) => setForm((s) => ({ ...s, [k]: v ? 1 : 0 }))} />
+            <div>
+              <Label htmlFor={k}>{label}</Label>
+              <p className="text-xs text-muted-foreground">{help}</p>
+            </div>
+          </div>
+        ))}
       </CardContent>
     </Card>
     <Card>
